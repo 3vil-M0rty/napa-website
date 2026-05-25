@@ -1,0 +1,39 @@
+{
+  "common": {
+    "success": "تمت العملية بنجاح",
+    "error": "حدث خطأ ما",
+    "notFound": "المورد غير موجود",
+    "unauthorized": "وصول غير مصرح به",
+    "forbidden": "الوصول محظور",
+    "validationError": "فشل التحقق من البيانات"
+  },
+  "auth": {
+    "loginSuccess": "مرحباً بعودتك",
+    "logoutSuccess": "تم تسجيل الخروج بنجاح",
+    "registerSuccess": "تم إنشاء الحساب بنجاح",
+    "invalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+    "tokenExpired": "انتهت الجلسة، يرجى تسجيل الدخول مرة أخرى",
+    "emailTaken": "هذا البريد الإلكتروني مسجل بالفعل"
+  },
+  "reservation": {
+    "created": "تم تأكيد حجزك",
+    "updated": "تم تحديث الحجز بنجاح",
+    "cancelled": "تم إلغاء الحجز",
+    "notFound": "الحجز غير موجود",
+    "alreadyCancelled": "هذا الحجز ملغى مسبقاً",
+    "noTablesAvailable": "لا توجد طاولات متاحة لهذا الموعد",
+    "pastDate": "يجب أن يكون تاريخ الحجز في المستقبل",
+    "confirmationEmail": "تم إرسال التأكيد إلى {{email}}",
+    "reminderEmail": "تذكير: حجزك غداً في تمام {{time}}"
+  },
+  "table": {
+    "notFound": "الطاولة غير موجودة",
+    "unavailable": "الطاولة غير متاحة",
+    "created": "تم إنشاء الطاولة",
+    "updated": "تم تحديث الطاولة"
+  },
+  "email": {
+    "reservationSubject": "حجزك في NAPA Chapter One — {{date}}",
+    "cancellationSubject": "إلغاء الحجز — NAPA Chapter One"
+  }
+}

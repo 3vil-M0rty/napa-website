@@ -1,0 +1,39 @@
+{
+  "common": {
+    "success": "Operation successful",
+    "error": "An error occurred",
+    "notFound": "Resource not found",
+    "unauthorized": "Unauthorized access",
+    "forbidden": "Access forbidden",
+    "validationError": "Validation failed"
+  },
+  "auth": {
+    "loginSuccess": "Welcome back",
+    "logoutSuccess": "Logged out successfully",
+    "registerSuccess": "Account created successfully",
+    "invalidCredentials": "Invalid email or password",
+    "tokenExpired": "Session expired, please log in again",
+    "emailTaken": "This email is already registered"
+  },
+  "reservation": {
+    "created": "Your reservation has been confirmed",
+    "updated": "Reservation updated successfully",
+    "cancelled": "Reservation cancelled",
+    "notFound": "Reservation not found",
+    "alreadyCancelled": "This reservation is already cancelled",
+    "noTablesAvailable": "No tables available for this time slot",
+    "pastDate": "Reservation date must be in the future",
+    "confirmationEmail": "Confirmation sent to {{email}}",
+    "reminderEmail": "Reminder: Your reservation is tomorrow at {{time}}"
+  },
+  "table": {
+    "notFound": "Table not found",
+    "unavailable": "Table is not available",
+    "created": "Table created",
+    "updated": "Table updated"
+  },
+  "email": {
+    "reservationSubject": "Your reservation at NAPA Chapter One — {{date}}",
+    "cancellationSubject": "Reservation cancellation — NAPA Chapter One"
+  }
+}

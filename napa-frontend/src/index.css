@@ -1,0 +1,642 @@
+/* src/index.css */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* ── NAPA Brand Colors — OKLCH with hex fallbacks ── */
+  --crimson-fallback: #6b1414;
+  --crimson: oklch(28% 0.13 15);
+
+  --blush-fallback: #f5d5d5;
+  --blush: oklch(90% 0.04 5);
+
+  --blush-deep-fallback: #e8b8b8;
+  --blush-deep: oklch(82% 0.06 5);
+
+  --dark-fallback: #130f0f;
+  --dark: oklch(10% 0.015 20);
+
+  --dark-mid-fallback: #1e1616;
+  --dark-mid: oklch(14% 0.02 15);
+
+  --umber-fallback: #5c3a28;
+  --umber: oklch(34% 0.06 35);
+
+  --gold-fallback: #c9a96e;
+  --gold: oklch(74% 0.09 65);
+
+  --pearl-fallback: #faf5f0;
+  --pearl: oklch(97% 0.008 70);
+
+  --text-primary-fallback: #faf5f0;
+  --text-primary: oklch(97% 0.008 70);
+
+  --text-muted-fallback: #b89090;
+  --text-muted: oklch(67% 0.05 15);
+
+  /* ── Fonts ── */
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'Cormorant Garamond', Georgia, serif;
+  --font-label: 'Cinzel', 'Times New Roman', serif;
+
+  /* ── Transitions ── */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@supports not (color: oklch(0% 0 0)) {
+  :root {
+    --crimson: var(--crimson-fallback);
+    --blush: var(--blush-fallback);
+    --blush-deep: var(--blush-deep-fallback);
+    --dark: var(--dark-fallback);
+    --dark-mid: var(--dark-mid-fallback);
+    --umber: var(--umber-fallback);
+    --gold: var(--gold-fallback);
+    --pearl: var(--pearl-fallback);
+    --text-primary: var(--text-primary-fallback);
+    --text-muted: var(--text-muted-fallback);
+  }
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--dark);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  cursor: default;
+}
+
+/* ── Custom scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--umber);
+  border-radius: 3px;
+}
+
+/* ── Form base ── */
+input,
+select,
+textarea {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(201, 169, 110, 0.25);
+  color: var(--text-primary);
+  border-radius: 4px;
+  padding: 10px 14px;
+  width: 100%;
+  transition: border-color 0.2s, background 0.2s;
+  outline: none;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--gold);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+select option {
+  background: var(--dark-mid);
+}
+
+/* ── Button base ── */
+.btn {
+  font-family: var(--font-label);
+  letter-spacing: 2px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-out);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: var(--crimson);
+  color: var(--blush);
+  padding: 14px 36px;
+  border-radius: 2px;
+}
+
+.btn-primary:hover {
+  background: oklch(34% 0.13 15);
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid rgba(201, 169, 110, 0.4);
+  padding: 10px 24px;
+  border-radius: 2px;
+}
+
+.btn-ghost:hover {
+  border-color: var(--gold);
+  background: rgba(201, 169, 110, 0.08);
+}
+
+.btn-danger {
+  background: transparent;
+  color: #e57373;
+  border: 1px solid rgba(229, 115, 115, 0.3);
+  padding: 8px 16px;
+  border-radius: 2px;
+  font-size: 0.65rem;
+}
+
+.btn-danger:hover {
+  background: rgba(229, 115, 115, 0.1);
+}
+
+/* ── Status badges ── */
+.badge {
+  font-family: var(--font-label);
+  font-size: 0.55rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 2px;
+}
+
+.badge-confirmed {
+  background: rgba(46, 160, 90, 0.15);
+  color: #5cb85c;
+  border: 1px solid rgba(46, 160, 90, 0.25);
+}
+
+.badge-pending {
+  background: rgba(201, 169, 110, 0.15);
+  color: var(--gold);
+  border: 1px solid rgba(201, 169, 110, 0.25);
+}
+
+.badge-cancelled {
+  background: rgba(229, 115, 115, 0.1);
+  color: #e57373;
+  border: 1px solid rgba(229, 115, 115, 0.2);
+}
+
+.badge-seated {
+  background: rgba(100, 149, 237, 0.15);
+  color: #6495ed;
+  border: 1px solid rgba(100, 149, 237, 0.25);
+}
+
+.badge-completed {
+  background: rgba(150, 150, 150, 0.1);
+  color: var(--text-muted);
+  border: 1px solid rgba(150, 150, 150, 0.2);
+}
+
+/* ── Divider ── */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201, 169, 110, 0.3), transparent);
+  margin: 2rem 0;
+}
+
+/* ── Glass card ── */
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(201, 169, 110, 0.15);
+  border-radius: 4px;
+  backdrop-filter: blur(8px);
+}
+
+
+.gallery-wrap {
+  position: relative;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+.gallery {
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+
+.gallery--bento {
+  display: grid;
+  gap: 1vh;
+  grid-template-columns: repeat(3, 32.5vw);
+  grid-template-rows: repeat(4, 23vh);
+  justify-content: center;
+  align-content: center;
+}
+
+.gallery--final {
+  grid-template-columns: repeat(3, 100vw);
+  grid-template-rows: repeat(4, 50vh);
+}
+
+.gallery__item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* src/index.css */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* ── NAPA Brand Colors — OKLCH with hex fallbacks ── */
+  --crimson-fallback: #6b1414;
+  --crimson: oklch(28% 0.13 15);
+
+  --blush-fallback: #f5d5d5;
+  --blush: oklch(90% 0.04 5);
+
+  --blush-deep-fallback: #e8b8b8;
+  --blush-deep: oklch(82% 0.06 5);
+
+  --dark-fallback: #130f0f;
+  --dark: oklch(10% 0.015 20);
+
+  --dark-mid-fallback: #1e1616;
+  --dark-mid: oklch(14% 0.02 15);
+
+  --umber-fallback: #5c3a28;
+  --umber: oklch(34% 0.06 35);
+
+  --gold-fallback: #c9a96e;
+  --gold: oklch(74% 0.09 65);
+
+  --pearl-fallback: #faf5f0;
+  --pearl: oklch(97% 0.008 70);
+
+  --text-primary-fallback: #faf5f0;
+  --text-primary: oklch(97% 0.008 70);
+
+  --text-muted-fallback: #b89090;
+  --text-muted: oklch(67% 0.05 15);
+
+  /* ── Fonts ── */
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'Cormorant Garamond', Georgia, serif;
+  --font-label: 'Cinzel', 'Times New Roman', serif;
+
+  /* ── Transitions ── */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@supports not (color: oklch(0% 0 0)) {
+  :root {
+    --crimson: var(--crimson-fallback);
+    --blush: var(--blush-fallback);
+    --blush-deep: var(--blush-deep-fallback);
+    --dark: var(--dark-fallback);
+    --dark-mid: var(--dark-mid-fallback);
+    --umber: var(--umber-fallback);
+    --gold: var(--gold-fallback);
+    --pearl: var(--pearl-fallback);
+    --text-primary: var(--text-primary-fallback);
+    --text-muted: var(--text-muted-fallback);
+  }
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--dark);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  cursor: default;
+}
+
+/* ── Custom scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--umber);
+  border-radius: 3px;
+}
+
+/* ── Form base ── */
+input,
+select,
+textarea {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(201, 169, 110, 0.25);
+  color: var(--text-primary);
+  border-radius: 4px;
+  padding: 10px 14px;
+  width: 100%;
+  transition: border-color 0.2s, background 0.2s;
+  outline: none;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--gold);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+select option {
+  background: var(--dark-mid);
+}
+
+/* ── Button base ── */
+.btn {
+  font-family: var(--font-label);
+  letter-spacing: 2px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-out);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: var(--crimson);
+  color: var(--blush);
+  padding: 14px 36px;
+  border-radius: 2px;
+}
+
+.btn-primary:hover {
+  background: oklch(34% 0.13 15);
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid rgba(201, 169, 110, 0.4);
+  padding: 10px 24px;
+  border-radius: 2px;
+}
+
+.btn-ghost:hover {
+  border-color: var(--gold);
+  background: rgba(201, 169, 110, 0.08);
+}
+
+.btn-danger {
+  background: transparent;
+  color: #e57373;
+  border: 1px solid rgba(229, 115, 115, 0.3);
+  padding: 8px 16px;
+  border-radius: 2px;
+  font-size: 0.65rem;
+}
+
+.btn-danger:hover {
+  background: rgba(229, 115, 115, 0.1);
+}
+
+/* ── Status badges ── */
+.badge {
+  font-family: var(--font-label);
+  font-size: 0.55rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 2px;
+}
+
+.badge-confirmed {
+  background: rgba(46, 160, 90, 0.15);
+  color: #5cb85c;
+  border: 1px solid rgba(46, 160, 90, 0.25);
+}
+
+.badge-pending {
+  background: rgba(201, 169, 110, 0.15);
+  color: var(--gold);
+  border: 1px solid rgba(201, 169, 110, 0.25);
+}
+
+.badge-cancelled {
+  background: rgba(229, 115, 115, 0.1);
+  color: #e57373;
+  border: 1px solid rgba(229, 115, 115, 0.2);
+}
+
+.badge-seated {
+  background: rgba(100, 149, 237, 0.15);
+  color: #6495ed;
+  border: 1px solid rgba(100, 149, 237, 0.25);
+}
+
+.badge-completed {
+  background: rgba(150, 150, 150, 0.1);
+  color: var(--text-muted);
+  border: 1px solid rgba(150, 150, 150, 0.2);
+}
+
+/* ── Divider ── */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201, 169, 110, 0.3), transparent);
+  margin: 2rem 0;
+}
+
+/* ── Glass card ── */
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(201, 169, 110, 0.15);
+  border-radius: 4px;
+  backdrop-filter: blur(8px);
+}
+
+
+.gallery-wrap {
+  position: relative;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+.gallery {
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+
+.gallery--bento {
+  display: grid;
+  gap: 1vh;
+  grid-template-columns: repeat(3, 32.5vw);
+  grid-template-rows: repeat(4, 23vh);
+  justify-content: center;
+  align-content: center;
+}
+
+.gallery--final {
+  grid-template-columns: repeat(3, 100vw);
+  grid-template-rows: repeat(4, 50vh);
+}
+
+.gallery__item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── ImageZoomSection ── */
+
+/* Outer container: two columns side by side on desktop */
+.contentZoom {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+}
+
+/* Left column: scrolls normally */
+.leftSection {
+  width: 50%;
+  flex-shrink: 0;
+}
+
+/* Each text section is exactly one viewport tall */
+.sectionSc {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: 4rem 3rem;
+}
+
+.section-content h1 {
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  margin-bottom: 1.5rem;
+  color: #f5d5d5;
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+}
+
+.section-content p {
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  color: #b89090;
+  max-width: 38ch;
+  line-height: 1.7;
+  font-family: 'Cormorant Garamond', serif;
+}
+
+/* Right column: sticks while left scrolls */
+.rightSection {
+  width: 50%;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Wrapper clips the zooming image */
+.zoom-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+/* GSAP scales + translates this element */
+.zoom-target {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transform-origin: 0px 0px;
+  will-change: transform;
+}
+
+/* ── Mobile: stack image on top, text below ── */
+@media (max-width: 767px) {
+  .contentZoom {
+    flex-direction: column;
+  }
+
+  /* Text sections sit below the image */
+  .leftSection {
+    width: 100%;
+    order: 2;
+  }
+
+  /* Image banner sticks to the top of the viewport */
+  .rightSection {
+    width: 100%;
+    /* Square-ish crop that feels generous without eating the whole screen */
+    height: 50vw;
+    min-height: 240px;
+    max-height: 380px;
+    position: sticky;
+    top: 0;
+    order: 1;
+    z-index: 10;
+  }
+
+  .sectionSc {
+    min-height: 100vh;
+    padding: 2.5rem 1.5rem;
+  }
+
+  .section-content h1 {
+    font-size: clamp(1.6rem, 7vw, 2.5rem);
+  }
+
+  .section-content p {
+    font-size: clamp(0.95rem, 4vw, 1.15rem);
+    max-width: 100%;
+  }
+}
