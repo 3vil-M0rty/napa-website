@@ -1,15 +1,64 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NAPA Chapter One</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Cormorant+Garamond:wght@300;400;500;600&family=Cinzel:wght@400;600&display=swap" rel="stylesheet" />
-</head>
-<body>
-  <div id="root"></div>
-  <script type="module" src="/src/main.jsx"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- ─── CRITICAL: loader background shown BEFORE any JS executes ─────────
+         This is the real fix for the white flash. The gradient here matches
+         the React loader exactly, so the page is never white.                -->
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(160deg, #8b1d1f 0%, #cc5355 45%, #ebb3b3 100%);
+        overflow: hidden;
+      }
+      #root {
+        min-height: 100vh;
+      }
+    </style>
+
+    <!-- Preconnect to Google Fonts so Cormorant Garamond + Inter load fast -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Preload the hero 3D assets so useProgress fires faster -->
+    <link rel="preload" href="/models/bottle.glb" as="fetch" crossorigin />
+    <link rel="preload" href="/scene.hdr" as="fetch" crossorigin />
+
+    <title>NAPA Chapter One — Single-Vine Burgundy Wine | First Release MMXXIV</title>
+
+    <!-- ─── SEO META (fallback for crawlers that don't exec JS) ─────────── -->
+    <meta name="description" content="NAPA Chapter One: a single-vine, single-vintage Burgundy wine from Bourgogne, France. First Release MMXXIV — Lot 001/320. Reserve your exclusive tasting today." />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="theme-color" content="#8b1d1f" />
+    <link rel="canonical" href="https://napachapterone.com/" />
+
+    <!-- Open Graph -->
+    <meta property="og:type"        content="website" />
+    <meta property="og:site_name"   content="NAPA Chapter One" />
+    <meta property="og:title"       content="NAPA Chapter One — First Release MMXXIV" />
+    <meta property="og:description" content="A single vine. A single vintage. Chapter One begins now. Limited to 320 bottles — Bourgogne, France." />
+    <meta property="og:image"       content="https://napachapterone.com/og-image.jpg" />
+    <meta property="og:image:alt"   content="NAPA Chapter One bottle — First Release MMXXIV, Bourgogne" />
+    <meta property="og:url"         content="https://napachapterone.com/" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:title"       content="NAPA Chapter One — First Release MMXXIV" />
+    <meta name="twitter:description" content="A single vine. A single vintage. Limited to 320 bottles. Reserve a tasting in Bourgogne, France." />
+    <meta name="twitter:image"       content="https://napachapterone.com/og-image.jpg" />
+    <meta name="twitter:image:alt"   content="NAPA Chapter One wine bottle — MMXXIV" />
+
+    <!-- Geo -->
+    <meta name="geo.region"    content="FR-21" />
+    <meta name="geo.placename" content="Bourgogne, France" />
+    <meta name="geo.position"  content="47.0333;4.8333" />
+    <meta name="ICBM"          content="47.0333, 4.8333" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>
