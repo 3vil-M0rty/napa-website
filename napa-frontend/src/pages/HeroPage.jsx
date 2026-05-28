@@ -1,32 +1,3 @@
-// src/pages/HeroPage.jsx — FIXED v2
-//
-// BUG 1 (scroll trap on upward scroll through MobileStack):
-//   The canvas was intercepting touch events even while the user was scrolling
-//   inside the MobileStack region (below 100vh). R3F attaches native
-//   touchstart/touchmove listeners to the canvas element itself. Even with
-//   `touchAction: pan-y`, these listeners are still in the event path because
-//   the canvas is position:absolute inside the section which is in normal flow.
-//   On the way back UP, the browser hit the canvas's touch listeners before the
-//   document scroll handler, causing a full-viewport stall.
-//
-//   FIX: On touch devices, set `pointer-events: none` on the canvas once the
-//   user has scrolled past the hero section (scrollY > innerHeight). This
-//   completely removes the canvas from the touch event path while inside
-//   MobileStack, so native scroll is unblocked in both directions.
-//   The canvas gets pointer-events restored when scrolling back into the hero.
-//
-// BUG 2 (zoom animation bleeds beyond 100vh):
-//   The bottle's scale/position.z lerp has inertia — even after scrollProgress
-//   is clamped to 1, the lerp keeps running and the canvas keeps painting,
-//   which means touch events on the canvas are still "active" in the WebGL
-//   sense even when the user is deep in MobileStack. Combined with bug 1,
-//   this made the trap feel even longer.
-//
-//   FIX: When sp >= 1, immediately snap scale and position.z to their final
-//   values (no lerp), and set `isVisible.current = false` so the useFrame
-//   loop exits early. This ensures the animation is fully settled exactly at
-//   the 100vh boundary — no overshoot.
-
 import { useEffect, useRef, useState, Suspense } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
@@ -37,6 +8,8 @@ import MobileStack from '../components/MobileStack'
 import * as THREE from 'three'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { useGLTF, useTexture } from '@react-three/drei'
+
+import ImageGallery from '../components/ImageGallery'
 
 const STRUCTURED_DATA = {
   '@context': 'https://schema.org',
@@ -504,7 +477,7 @@ export default function HeroPage() {
           <FilmGrain />
           <HeroOverlay />
         </section>
-
+        <ImageGallery />
         <MobileStack />
         <ScrollSection />
       </main>
