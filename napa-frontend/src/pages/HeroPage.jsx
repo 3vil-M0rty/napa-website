@@ -149,9 +149,9 @@ function BottleModel({ scrollProgress }) {
       group.current.rotation.z += (rotZ - group.current.rotation.z) * 0.06
 
       // Scroll zoom
-      const targetZ = sp * 75
+      const targetZ = sp * 5
       group.current.position.z += (targetZ - group.current.position.z) * 0.06
-      const targetScale = 1 + sp * 16
+      const targetScale = 1 + sp * 8
       group.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.06)
     } else {
       // Desktop — full original behaviour
@@ -175,9 +175,9 @@ function BottleModel({ scrollProgress }) {
         group.current.rotation.x = frozenRotX.current * (1 - ease)
       }
 
-      const targetZ = sp * 100
+      const targetZ = sp * 5
       group.current.position.z += (targetZ - group.current.position.z) * 0.06
-      const targetScale = 1 + sp * 16
+      const targetScale = 1 + sp * 8
       group.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.06)
     }
   })

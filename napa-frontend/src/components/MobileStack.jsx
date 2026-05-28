@@ -15,7 +15,6 @@ const CSS = `
     position: relative;
   }
 
-  /* No parallax — pure sticky stack */
   .mbs3-slide {
     position: sticky;
     top: 0;
@@ -23,7 +22,6 @@ const CSS = `
     height: 100svh;
     width: 100%;
     overflow: hidden;
-    /* Kill blue tap highlight everywhere inside */
     -webkit-tap-highlight-color: transparent;
   }
 
@@ -69,13 +67,11 @@ const CSS = `
     border-radius: 2px;
     transform: translateY(-5%);
     box-shadow: 0 28px 64px rgba(0,0,0,.7), 0 0 0 1px rgba(201,169,110,.12);
-    /* No blue highlight on image touch */
     -webkit-tap-highlight-color: transparent;
     user-select: none;
     -webkit-user-select: none;
   }
 
-  /* Badge moved to bottom-left to avoid burger menu collision */
   .mbs3-badge {
     position: absolute;
     bottom: 52px;
@@ -158,44 +154,49 @@ export default function MobileStack() {
 
   return (
     <div className="mbs3" aria-label="Featured collection">
-      {SLIDES.map((slide, i) => (
-        <div
-          key={slide.slug || i}
-          className="mbs3-slide"
-          style={{ zIndex: i + 1 }}
-        >
+      {SLIDES.map((slide, i) => {
+        // Use mobile-specific images if provided, fall back to desktop ones
+        const bgSrc  = slide.mobileBackground || slide.background
+        const imgSrc = slide.mobileImg        || slide.img
+
+        return (
           <div
-            className="mbs3-bg"
-            style={{ backgroundImage: slide.background ? `url(${slide.background})` : 'none' }}
-          />
-
-          <div className="mbs3-ov-top" />
-          <div className="mbs3-ov-bot" />
-
-          <div className="mbs3-portrait-wrap">
-            <img
-              className="mbs3-portrait"
-              src={slide.img || ''}
-              alt={slide.altFallback || ''}
-              loading="eager"
-              decoding="sync"
-              draggable="false"
+            key={slide.slug || i}
+            className="mbs3-slide"
+            style={{ zIndex: i + 1 }}
+          >
+            <div
+              className="mbs3-bg"
+              style={{ backgroundImage: bgSrc ? `url(${bgSrc})` : 'none' }}
             />
-          </div>
 
-          {/* Badge moved to bottom-left, clear of burger menu */}
-          <div className="mbs3-badge">
-            {String(i + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
-          </div>
+            <div className="mbs3-ov-top" />
+            <div className="mbs3-ov-bot" />
 
-          <div className="mbs3-text">
-            <span className="mbs3-slug">{slide.slug || `chapter ${i + 1}`}</span>
-            <div className="mbs3-rule" />
-            <h2 className="mbs3-title">{slide.altFallback || `Slide ${i + 1}`}</h2>
-            {slide.subKey && <p className="mbs3-sub">{slide.subKey}</p>}
+            <div className="mbs3-portrait-wrap">
+              <img
+                className="mbs3-portrait"
+                src={imgSrc || ''}
+                alt={slide.altFallback || ''}
+                loading="eager"
+                decoding="sync"
+                draggable="false"
+              />
+            </div>
+
+            <div className="mbs3-badge">
+              {String(i + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
+            </div>
+
+            <div className="mbs3-text">
+              <span className="mbs3-slug">{slide.slug || `chapter ${i + 1}`}</span>
+              <div className="mbs3-rule" />
+              <h2 className="mbs3-title">{slide.altFallback || `Slide ${i + 1}`}</h2>
+              {slide.subKey && <p className="mbs3-sub">{slide.subKey}</p>}
+            </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
