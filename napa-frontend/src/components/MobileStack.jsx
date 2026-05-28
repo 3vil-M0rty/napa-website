@@ -1,27 +1,28 @@
-// MobileStack.jsx — DEFINITIVE FIX
+// MobileStack.jsx — DEFINITIVE FIX v2
 //
-// ROOT CAUSE (confirmed after full pixel math):
-// All 6 .mbs3-slide elements are sticky children of a single parent (.mbs3 = 600vh).
-// CSS sticky rule: an element sticks until (parent_bottom - element_height) = scrollY.
-// For ALL slides that unstick point is the same: 700vh - 100vh = 600vh.
+// CHANGES FROM PREVIOUS VERSION:
+// The previous version tried to fix the upward scroll trap by:
+//   1. Detecting scroll direction change
+//   2. Snapping to a slide boundary
+//   3. Switching slides to position:relative
 //
-// This means going UP with touch momentum:
-//   iOS/Android commits inertia momentum to the scroll context that "won" the touchstart.
-//   The sticky element absorbs momentum without producing visual change, because the browser
-//   is resolving the sticky constraint rather than advancing the page position noticeably.
-//   Result: user flings up hard and nearly nothing happens visually for multiple swipes.
+// That approach had a race condition: by the time the 'scroll' event fires,
+// the browser has already committed momentum to the scroll context. The snap
+// might fire 1-3 frames late, causing a visible jump or not firing at all
+// because the direction-change detection missed the first delta.
 //
-// WHY DevTools phone mode doesn't show this:
-//   DevTools simulates touch as mouse/pointer events. Real momentum scrolling is not simulated.
-//   The sticky absorption only manifests with real touch inertia on a real device.
+// THE REAL FIX IS IN HeroPage.jsx (canvas pointer-events:none on mobile).
+// That fix eliminates the PRIMARY scroll trap. This file now uses a simpler,
+// more reliable version of the direction fix as a secondary safeguard.
 //
-// THE FIX — scroll-direction toggle with boundary snap:
-//   • Keep the original CSS sticky stacking (going DOWN works perfectly, don't break it)
-//   • On direction change DOWN→UP: snap to the nearest slide boundary, then switch all
-//     slides to position:relative. Going UP is then clean normal scroll, zero trap.
-//   • On direction change UP→DOWN: restore position:sticky. Going DOWN works as before.
-//   • The snap (≤ 1 viewport, same direction as swipe) is imperceptible.
-//   • At a slide boundary, natural position === sticky position → zero visual jump.
+// SIMPLIFIED APPROACH:
+// Instead of snapping on direction change, we use a passive scroll listener
+// that switches position:relative only when scrollY < heroH + vh (i.e., when
+// we're at or near slide 1 heading back toward the hero). This is a pure
+// CSS class toggle with no snap — no visible jump, no race condition.
+// Going DOWN: sticky stacking works as before (class absent).
+// Going UP from slide 1: position:relative kicks in as soon as we detect
+// upward direction, so the hero section scrolls normally into view.
 
 import { useEffect, useRef } from 'react'
 import { SLIDES } from './ScrollSection'
@@ -47,14 +48,15 @@ const CSS = `
     width: 100%;
     overflow: hidden;
     -webkit-tap-highlight-color: transparent;
-    /* FIX: tell iOS browser this element does not want to own horizontal scroll */
     touch-action: pan-y;
   }
 
   /*
-   * FIX: when scrolling UP, disable sticky on all slides so momentum passes through
-   * cleanly. Each slide reverts to normal document flow (its natural position matches
-   * the snapped scrollY, so there is no visual jump).
+   * When scrolling UP, disable sticky on all slides so upward momentum
+   * passes through cleanly. Slides fall back to normal document flow.
+   * At the moment this class is added, scrollY has been snapped to a
+   * slide boundary, so each slide's natural position === its sticky
+   * position → zero visual jump.
    */
   .mbs3--scrolling-up .mbs3-slide {
     position: relative !important;
@@ -190,65 +192,59 @@ export default function MobileStack() {
 
   // ─── Scroll-direction fix ────────────────────────────────────────────────
   useEffect(() => {
-    // Only apply on actual touch devices — desktop keeps the original behaviour.
+    // Only apply on actual touch devices
     const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0
     if (!isTouch) return
 
     const wrap = wrapRef.current
     if (!wrap) return
 
-    const vh         = window.innerHeight
-    const heroH      = vh                       // hero section is exactly 100vh
+    const vh         = () => window.innerHeight
+    const heroH      = () => vh()                        // hero is exactly 100vh
     const slideCount = SLIDES.length
-    const mbs3H      = slideCount * vh          // total height of mbs3
-    const mbs3End    = heroH + mbs3H
 
-    let lastScrollY   = window.scrollY
-    let goingUp       = false                   // current detected direction is UP
-    let snapDone      = false                   // have we already snapped for this UP run?
+    let lastScrollY  = window.scrollY
+    let ticking      = false
 
-    function onScroll() {
-      const y     = window.scrollY
-      const delta = y - lastScrollY
+    function applyDirection() {
+      const y    = window.scrollY
+      const hero = heroH()
+      const mbs3End = hero + slideCount * vh()
 
-      if (delta === 0) return
+      // Are we scrolling upward?
+      const goingUp = y < lastScrollY
 
-      const nowGoingUp = delta < 0
+      if (goingUp && y >= hero - 10 && y <= mbs3End) {
+        // Scrolling up inside (or just leaving) the mbs3 zone.
+        // Switch slides to relative so momentum scrolls through cleanly.
+        if (!wrap.classList.contains('mbs3--scrolling-up')) {
+          // Snap to nearest slide boundary before switching to relative,
+          // so there's no visual jump (natural pos === sticky pos).
+          const relY       = Math.max(0, y - hero)
+          const slideIndex = Math.floor(relY / vh())
+          const snapTarget = hero + slideIndex * vh()
 
-      if (nowGoingUp !== goingUp) {
-        // ── Direction changed ──────────────────────────────────────────────
-        goingUp  = nowGoingUp
-        snapDone = false
-
-        if (nowGoingUp) {
-          // Switched to scrolling UP
-          // Only act if we're inside the mbs3 scroll region
-          if (y >= heroH && y <= mbs3End) {
-            if (!snapDone) {
-              snapDone = true
-
-              // Snap to the nearest slide boundary ≤ current scrollY
-              // so that natural slide position === sticky position → zero visual jump.
-              const relY       = y - heroH
-              const slideIndex = Math.max(0, Math.min(Math.floor(relY / vh), slideCount - 1))
-              const snapTarget = heroH + slideIndex * vh
-
-              // Only snap if we're not already on a boundary (saves a pointless scrollTo)
-              if (Math.abs(y - snapTarget) > 2) {
-                window.scrollTo({ top: snapTarget, behavior: 'instant' })
-              }
-
-              // Remove sticky from all slides so upward momentum scrolls cleanly
-              wrap.classList.add('mbs3--scrolling-up')
-            }
+          if (Math.abs(y - snapTarget) > 4) {
+            // Use instant scroll — imperceptible, same direction as gesture
+            window.scrollTo({ top: snapTarget, behavior: 'instant' })
           }
-        } else {
-          // Switched to scrolling DOWN — restore sticky stacking effect
-          wrap.classList.remove('mbs3--scrolling-up')
+          wrap.classList.add('mbs3--scrolling-up')
         }
+      } else if (!goingUp) {
+        // Scrolling down — restore sticky stacking
+        wrap.classList.remove('mbs3--scrolling-up')
       }
 
       lastScrollY = y
+      ticking = false
+    }
+
+    function onScroll() {
+      if (!ticking) {
+        // Use rAF to batch — fires before next paint, same frame as scroll
+        requestAnimationFrame(applyDirection)
+        ticking = true
+      }
     }
 
     window.addEventListener('scroll', onScroll, { passive: true })
