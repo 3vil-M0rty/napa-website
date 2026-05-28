@@ -132,23 +132,27 @@ function BottleModel({ scrollProgress }) {
     const sp = scrollProgress.current
 
     if (isTouch.current) {
-      // Float — no rotation
-      const floatY = Math.sin(elapsed * 0.5) * 0.22
-      const swayX = Math.sin(elapsed * 0.31 + 1.2) * 0.06
-      const breathe = Math.sin(elapsed * 0.7 + 0.5) * 0.03
+      // More pronounced float
+      const floatY = Math.sin(elapsed * 0.45) * 0.38          // bigger, slower bob
+      const swayX = Math.sin(elapsed * 0.28 + 1.2) * 0.09   // wider side drift
+
+      // Gentle oscillating Y rotation — left/right sway
+      const rotY = Math.sin(elapsed * 0.35) * 0.12          // ~7° each side
+      const rotZ = Math.sin(elapsed * 0.22 + 0.8) * 0.03   // tiny tilt for life
+
       group.current.position.x += (swayX - group.current.position.x) * 0.03
       group.current.position.y = -0.5 + floatY + sp * 0.6
-      group.current.position.z += (breathe - group.current.position.z) * 0.03
-      group.current.rotation.x = 0
-      group.current.rotation.y = 0
-      group.current.rotation.z = 0
+      group.current.position.z += (-Math.sin(elapsed * 0.5) * 0.04 - group.current.position.z) * 0.03
 
-      // Scroll zoom — same as desktop
-      const targetZ = sp * 100
+      group.current.rotation.x = 0
+      group.current.rotation.y += (rotY - group.current.rotation.y) * 0.04
+      group.current.rotation.z += (rotZ - group.current.rotation.z) * 0.04
+
+      // Scroll zoom
+      const targetZ = sp * 90
       group.current.position.z += (targetZ - group.current.position.z) * 0.06
       const targetScale = 1 + sp * 16
       group.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.06)
-
     } else {
       // Desktop — full original behaviour
       const bobAmp = 0.09 * (1 - sp * 0.8)
