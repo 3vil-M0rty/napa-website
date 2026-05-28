@@ -8,7 +8,7 @@ import ScrollSection from '../components/ScrollSection'
 import MobileStack from '../components/MobileStack'
 import * as THREE from 'three'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { useGLTF, useEnvironment } from '@react-three/drei'
+import { useGLTF, useTexture } from '@react-three/drei'
 
 const STRUCTURED_DATA = {
   '@context': 'https://schema.org',
@@ -48,37 +48,35 @@ const MOUSE_PARALLAX = 0.06
 // Swaps the 26MB scene.hdr for /images/a1.webp (~100KB)
 // Remove the useEnvironment import from @react-three/drei if nothing else uses it.
 
+// Full drop-in replacement for HDRBackground in HeroPage.jsx
+// Uses useTexture from @react-three/drei so the texture is loaded
+// synchronously inside Suspense — no blank background flash.
+
+// ADD useTexture to your @react-three/drei import:
+// import { useGLTF, useTexture } from '@react-three/drei'
+
 function HDRBackground() {
   const { scene, gl } = useThree()
   const sphereRef     = useRef()
-  const texRef        = useRef(null)
+  const tex           = useTexture('/images/a1.webp')
 
   useEffect(() => {
-    const loader = new THREE.TextureLoader()
-    loader.load('/images/a1.webp', (tex) => {
-      tex.mapping    = THREE.EquirectangularReflectionMapping
-      tex.colorSpace = THREE.SRGBColorSpace
+    if (!tex) return
+    tex.mapping    = THREE.EquirectangularReflectionMapping
+    tex.colorSpace = THREE.SRGBColorSpace
+    tex.needsUpdate = true
 
-      // Set as scene background sphere texture
-      texRef.current = tex
-      if (sphereRef.current) {
-        sphereRef.current.material.map = tex
-        sphereRef.current.material.needsUpdate = true
-      }
-
-      // Also generate env map for bottle reflections
-      const pmrem  = new THREE.PMREMGenerator(gl)
-      pmrem.compileEquirectangularShader()
-      const envMap = pmrem.fromEquirectangular(tex).texture
-      scene.environment = envMap
-      pmrem.dispose()
-    })
+    // Generate env map for bottle reflections
+    const pmrem  = new THREE.PMREMGenerator(gl)
+    pmrem.compileEquirectangularShader()
+    const envMap = pmrem.fromEquirectangular(tex).texture
+    scene.environment = envMap
+    pmrem.dispose()
 
     return () => {
       scene.environment = null
-      texRef.current?.dispose()
     }
-  }, [scene, gl])
+  }, [tex, scene, gl])
 
   useFrame((state) => {
     if (!sphereRef.current) return
@@ -91,7 +89,7 @@ function HDRBackground() {
   return (
     <mesh ref={sphereRef} scale={[-1, 1, 1]}>
       <sphereGeometry args={[400, 60, 40]} />
-      <meshBasicMaterial />
+      <meshBasicMaterial map={tex} />
     </mesh>
   )
 }
