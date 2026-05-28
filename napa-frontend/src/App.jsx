@@ -60,7 +60,7 @@ function LoaderOverlay({ progress }) {
         if (!len) len = 400
         el.style.fill             = 'none'
         el.style.stroke           = '#8b1d1f'
-        el.style.strokeWidth      = '1.2px'
+        el.style.strokeWidth      = '3px'
         el.style.strokeDasharray  = `${len}`
         el.style.strokeDashoffset = `${len}`
         el.style.transition       = 'none'

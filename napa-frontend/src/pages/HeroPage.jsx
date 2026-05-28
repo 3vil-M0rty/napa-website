@@ -20,37 +20,22 @@ const STRUCTURED_DATA = {
       description: 'An intimate Art Deco wine and cocktail bar in Gueliz, Marrakech. Natural and organic wines, farm-to-bar cocktails, and small plates. A project by Aziz Nahas, Benjamin Pastor, and Simone Mérette.',
       url: 'https://napachapterone.com',
       logo: 'https://napachapterone.com/napaco.svg',
-      address: {
-        '@type': 'PostalAddress',
-        streetAddress: 'Gueliz',
-        addressLocality: 'Marrakech',
-        addressCountry: 'MA',
-      },
+      address: { '@type': 'PostalAddress', streetAddress: 'Gueliz', addressLocality: 'Marrakech', addressCountry: 'MA' },
       geo: { '@type': 'GeoCoordinates', latitude: '31.6351689', longitude: '-8.0152064' },
       openingHoursSpecification: [
-        { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], opens: '17:00', closes: '01:00' },
+        { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Tuesday','Wednesday','Thursday','Friday','Saturday'], opens: '17:00', closes: '01:00' },
       ],
-      servesCuisine: ['Wine Bar', 'Cocktail Bar', 'Small Plates', 'Natural Wine'],
+      servesCuisine: ['Wine Bar','Cocktail Bar','Small Plates','Natural Wine'],
       priceRange: '$$',
       telephone: '+212 524 423 022',
       sameAs: ['https://www.instagram.com/napachapterone'],
-      offers: {
-        '@type': 'Offer',
-        name: 'Reserve a Table — NAPA Chapter One',
-        url: 'https://napachapterone.com/reserve',
-        availability: 'https://schema.org/InStock',
-      },
+      offers: { '@type': 'Offer', name: 'Reserve a Table — NAPA Chapter One', url: 'https://napachapterone.com/reserve', availability: 'https://schema.org/InStock' },
     },
     {
       '@type': 'LocalBusiness',
       name: 'NAPA Chapter One',
       description: 'Wine bar and cocktail lounge in Gueliz, Marrakech. Natural wines, farm-to-bar cocktails with Moroccan botanicals from Sanctuary Slimane, and sharing plates. Open Tue–Sat from 5pm.',
-      address: {
-        '@type': 'PostalAddress',
-        addressLocality: 'Marrakech',
-        addressRegion: 'Marrakech-Safi',
-        addressCountry: 'MA',
-      },
+      address: { '@type': 'PostalAddress', addressLocality: 'Marrakech', addressRegion: 'Marrakech-Safi', addressCountry: 'MA' },
     },
   ],
 }
@@ -67,7 +52,7 @@ function HDRBackground() {
     scene.background = tex
 
     const envTex = tex.clone()
-    envTex.mapping = THREE.EquirectangularReflectionMapping
+    envTex.mapping    = THREE.EquirectangularReflectionMapping
     envTex.colorSpace = THREE.SRGBColorSpace
     envTex.needsUpdate = true
     const pmrem = new THREE.PMREMGenerator(gl)
@@ -76,22 +61,20 @@ function HDRBackground() {
     pmrem.dispose()
     envTex.dispose()
 
-    return () => {
-      scene.background = null
-      scene.environment = null
-    }
+    return () => { scene.background = null; scene.environment = null }
   }, [tex, scene, gl])
 
   return null
 }
+
 function BottleModel({ scrollProgress }) {
-  const model = useGLTF('/models/bottle.glb')
-  const group = useRef()
-  const isVisible = useRef(true)
+  const model    = useGLTF('/models/bottle.glb')
+  const group    = useRef()
+  const isVisible  = useRef(true)
   const frozenRotY = useRef(0)
   const frozenRotX = useRef(0)
-  const labelRotY = useRef(0)
-  const isTouch = useRef('ontouchstart' in window || navigator.maxTouchPoints > 0)
+  const labelRotY  = useRef(0)
+  const isTouch    = useRef('ontouchstart' in window || navigator.maxTouchPoints > 0)
 
   useEffect(() => {
     let labelOffset = 0
@@ -112,53 +95,52 @@ function BottleModel({ scrollProgress }) {
   useEffect(() => {
     const handleScroll = () => {
       const vh = window.innerHeight
-      // Only track scroll within the first viewport height
-      // After that, clamp to 1 so the zoom holds its final state
-      const raw = window.scrollY / (vh * 1)
+      // Progress completes over 100vh (one full viewport scroll)
+      const raw = window.scrollY / vh
       scrollProgress.current = Math.min(Math.max(raw, 0), 1)
-      isVisible.current = window.scrollY < vh * 0.9
+      isVisible.current = window.scrollY < vh
     }
     handleScroll()
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [scrollProgress])
 
-  // Replace the useFrame inside BottleModel in HeroPage.jsx
-  // Touch: float animation + scroll zoom restored, still no rotation
-
-  // Replace the entire useFrame inside BottleModel in HeroPage.jsx
-
   useFrame((state) => {
     if (!group.current) return
+
+    // When fully scrolled past the hero, snap everything to rest and stop
+    // This means no wasted animation while user scrolls through MobileStack
+    if (scrollProgress.current >= 1) {
+      group.current.scale.set(1 + (isTouch.current ? 3 : 8), 1 + (isTouch.current ? 3 : 8), 1 + (isTouch.current ? 3 : 8))
+      group.current.position.z = isTouch.current ? 5 : 5
+      return  // ← exit early, zero GPU work
+    }
+
     const elapsed = state.clock.elapsedTime
     const sp = scrollProgress.current
 
     if (isTouch.current) {
       const floatY = Math.sin(elapsed * 0.65) * 0.38
-      const swayX = Math.sin(elapsed * 0.42 + 1.2) * 0.09
-      const rotY = Math.sin(elapsed * 0.52) * 0.12
-      const rotZ = Math.sin(elapsed * 0.33 + 0.8) * 0.03
+      const swayX  = Math.sin(elapsed * 0.42 + 1.2) * 0.09
+      const rotY   = Math.sin(elapsed * 0.52) * 0.12
+      const rotZ   = Math.sin(elapsed * 0.33 + 0.8) * 0.03
 
       group.current.position.x += (swayX - group.current.position.x) * 0.05
-      group.current.position.y = -0.5 + floatY + sp * 0.6
+      group.current.position.y  = -0.5 + floatY + sp * 0.6
 
-      // Single z assignment — no double accumulation
       const targetZ = sp * 5
-      group.current.position.z += (targetZ - group.current.position.z) * 0.12  // faster lerp = snappier scroll up
+      group.current.position.z += (targetZ - group.current.position.z) * 0.12
 
-      group.current.rotation.x = 0
-      group.current.rotation.y += (rotY - group.current.rotation.y) * 0.06
-      group.current.rotation.z += (rotZ - group.current.rotation.z) * 0.06
+      group.current.rotation.x  = 0
+      group.current.rotation.y += (rotY   - group.current.rotation.y) * 0.06
+      group.current.rotation.z += (rotZ   - group.current.rotation.z) * 0.06
 
       const targetScale = 1 + sp * 3
-      group.current.scale.lerp(
-        new THREE.Vector3(targetScale, targetScale, targetScale),
-        0.12  // faster lerp = snappier scroll up
-      )
+      group.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.12)
 
     } else {
       const bobAmp = 0.09 * (1 - sp * 0.8)
-      const baseY = -0.5 + Math.sin(elapsed * 0.9) * bobAmp
+      const baseY  = -0.5 + Math.sin(elapsed * 0.9) * bobAmp
       group.current.position.y = baseY + sp * 0.6
 
       if (sp < 0.5) {
@@ -171,7 +153,7 @@ function BottleModel({ scrollProgress }) {
           frozenRotX.current = group.current.rotation.x
         }
       } else {
-        const t2 = (sp - 0.5) / 0.5
+        const t2   = (sp - 0.5) / 0.5
         const ease = t2 * t2 * (3 - 2 * t2)
         group.current.rotation.y = frozenRotY.current + (labelRotY.current - frozenRotY.current) * ease
         group.current.rotation.x = frozenRotX.current * (1 - ease)
@@ -181,12 +163,10 @@ function BottleModel({ scrollProgress }) {
       group.current.position.z += (targetZ - group.current.position.z) * 0.12
 
       const targetScale = 1 + sp * 8
-      group.current.scale.lerp(
-        new THREE.Vector3(targetScale, targetScale, targetScale),
-        0.12
-      )
+      group.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.12)
     }
   })
+
   return (
     <group ref={group}>
       <primitive object={model.scene} scale={18} position={[0, -1, 0]} />
@@ -247,11 +227,11 @@ function Vignette() {
 function HeroOverlay() {
   const { t } = useTranslation()
   const fontSerif = "'Cormorant Garamond', 'Cormorant', Georgia, 'Times New Roman', serif"
-  const fontSans = "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif"
-  const wineRed = '#8b1d1f'
-  const cream = '#faf6ef'
-  const creamy60 = 'rgba(250,246,239,0.6)'
-  const creamy45 = 'rgba(250,246,239,0.45)'
+  const fontSans  = "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+  const wineRed   = '#8b1d1f'
+  const cream     = '#faf6ef'
+  const creamy60  = 'rgba(250,246,239,0.6)'
+  const creamy45  = 'rgba(250,246,239,0.45)'
 
   const [isMobile, setIsMobile] = useState(
     typeof window !== 'undefined' ? window.innerWidth < 640 : false
@@ -264,7 +244,6 @@ function HeroOverlay() {
 
   return (
     <div aria-hidden="false" style={{ position: 'absolute', inset: 0, zIndex: 4, pointerEvents: 'none' }}>
-
       <motion.div
         initial={{ opacity: 0, x: 24 }}
         animate={{ opacity: 1, x: 0 }}
@@ -275,8 +254,7 @@ function HeroOverlay() {
           left: isMobile ? '1rem' : '55%',
           display: 'flex', flexDirection: 'column',
           alignItems: isMobile ? 'center' : 'flex-end',
-          gap: '22px',
-          textAlign: isMobile ? 'center' : 'right',
+          gap: '22px', textAlign: isMobile ? 'center' : 'right',
           pointerEvents: 'auto',
         }}
       >
@@ -323,17 +301,14 @@ function HeroOverlay() {
         </div>
       </motion.div>
 
-      {/* Bottom-left: location + hours */}
       <motion.address
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }}
         transition={{ delay: 3.2, duration: 1.2 }}
         style={{
           position: 'absolute',
           bottom: isMobile ? '1.5rem' : '2.5rem',
           left: isMobile ? '1rem' : '2rem',
-          fontStyle: 'normal',
-          display: 'flex', flexDirection: 'column', gap: '3px',
+          fontStyle: 'normal', display: 'flex', flexDirection: 'column', gap: '3px',
         }}
       >
         <span style={{ fontFamily: fontSans, fontSize: '10px', fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: cream }}>
@@ -349,17 +324,12 @@ function HeroOverlay() {
         )}
       </motion.address>
 
-      {/* Bottom-right: opening year + tagline — desktop only */}
       {!isMobile && (
         <motion.aside
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           transition={{ delay: 3.2, duration: 1.2 }}
           aria-label={t('hero.vintageAriaLabel')}
-          style={{
-            position: 'absolute', bottom: '2.5rem', right: '3vw',
-            display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px',
-          }}
+          style={{ position: 'absolute', bottom: '2.5rem', right: '3vw', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}
         >
           <span style={{ fontFamily: fontSerif, fontSize: 'clamp(38px, 4.5vw, 56px)', fontWeight: 600, letterSpacing: '0.04em', color: wineRed, lineHeight: 1 }}>
             MMXXVI
@@ -371,17 +341,11 @@ function HeroOverlay() {
         </motion.aside>
       )}
 
-      {/* Scroll cue — desktop only */}
       {!isMobile && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           transition={{ delay: 3.5, duration: 1.2 }}
-          style={{
-            position: 'absolute', bottom: '1.5rem', left: '50%',
-            transform: 'translateX(-50%)',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
-          }}
+          style={{ position: 'absolute', bottom: '1.5rem', left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}
         >
           <span style={{ fontFamily: fontSans, fontSize: '9px', fontWeight: 500, letterSpacing: '3px', textTransform: 'uppercase', color: creamy60 }}>
             {t('hero.scroll')}
@@ -399,39 +363,39 @@ function HeroOverlay() {
 
 export default function HeroPage() {
   const scrollProgress = useRef(0)
-  const { t, i18n } = useTranslation()
-  const lang = i18n.language === 'fr' ? 'fr' : 'en'
-  const isTouch = useRef('ontouchstart' in window || navigator.maxTouchPoints > 0)
+  const { t, i18n }   = useTranslation()
+  const lang           = i18n.language === 'fr' ? 'fr' : 'en'
+  const isTouch        = useRef('ontouchstart' in window || navigator.maxTouchPoints > 0)
 
   return (
     <>
       <Helmet>
         <html lang={lang} />
         <title>{t('seo.title')}</title>
-        <meta name="description" content={t('seo.description')} />
-        <meta name="keywords" content={t('seo.keywords')} />
-        <link rel="canonical" href="https://napachapterone.com/" />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="NAPA Chapter One" />
-        <meta property="og:title" content={t('seo.ogTitle')} />
+        <meta name="description"  content={t('seo.description')} />
+        <meta name="keywords"     content={t('seo.keywords')} />
+        <link rel="canonical"     href="https://napachapterone.com/" />
+        <meta property="og:type"        content="website" />
+        <meta property="og:site_name"   content="NAPA Chapter One" />
+        <meta property="og:title"       content={t('seo.ogTitle')} />
         <meta property="og:description" content={t('seo.ogDescription')} />
-        <meta property="og:image" content="https://napachapterone.com/og-image.jpg" />
-        <meta property="og:image:alt" content={t('seo.ogImageAlt')} />
-        <meta property="og:url" content="https://napachapterone.com/" />
-        <meta property="og:locale" content={lang === 'fr' ? 'fr_FR' : 'en_US'} />
+        <meta property="og:image"       content="https://napachapterone.com/og-image.jpg" />
+        <meta property="og:image:alt"   content={t('seo.ogImageAlt')} />
+        <meta property="og:url"         content="https://napachapterone.com/" />
+        <meta property="og:locale"      content={lang === 'fr' ? 'fr_FR' : 'en_US'} />
         <meta property="og:locale:alternate" content={lang === 'fr' ? 'en_US' : 'fr_FR'} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={t('seo.ogTitle')} />
+        <meta name="twitter:card"        content="summary_large_image" />
+        <meta name="twitter:title"       content={t('seo.ogTitle')} />
         <meta name="twitter:description" content={t('seo.ogDescription')} />
-        <meta name="twitter:image" content="https://napachapterone.com/og-image.jpg" />
-        <meta name="twitter:image:alt" content={t('seo.ogImageAlt')} />
-        <meta name="geo.region" content="MA-09" />
+        <meta name="twitter:image"       content="https://napachapterone.com/og-image.jpg" />
+        <meta name="twitter:image:alt"   content={t('seo.ogImageAlt')} />
+        <meta name="geo.region"    content="MA-09" />
         <meta name="geo.placename" content="Marrakech, Morocco" />
-        <meta name="geo.position" content="31.6351689;-8.0152064" />
-        <meta name="ICBM" content="31.6351689, -8.0152064" />
-        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
-        <meta name="author" content="NAPA Chapter One" />
-        <meta name="theme-color" content="#A11C24" />
+        <meta name="geo.position"  content="31.6351689;-8.0152064" />
+        <meta name="ICBM"          content="31.6351689, -8.0152064" />
+        <meta name="robots"        content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+        <meta name="author"        content="NAPA Chapter One" />
+        <meta name="theme-color"   content="#A11C24" />
         <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
         <script type="application/ld+json">{JSON.stringify(STRUCTURED_DATA)}</script>
       </Helmet>
@@ -463,7 +427,7 @@ export default function HeroPage() {
                 shadow-camera-top={8} shadow-camera-bottom={-8}
                 shadow-bias={-0.0004} shadow-radius={6}
               />
-              <directionalLight position={[5, 2, 4]} intensity={0.8} color="#ffb870" castShadow={false} />
+              <directionalLight position={[5, 2, 4]}   intensity={0.8} color="#ffb870" castShadow={false} />
               <directionalLight position={[-5, 6, -8]} intensity={1.4} color="#7baeff" castShadow={false} />
               <CursorLight />
               <BottleModel scrollProgress={scrollProgress} />
