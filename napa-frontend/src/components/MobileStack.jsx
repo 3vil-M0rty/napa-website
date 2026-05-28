@@ -178,93 +178,88 @@ const CSS = `
 `
 
 export default function MobileStack() {
-    /* const wrapRef = useRef(null)
-  
-    // ─── Inject styles ───────────────────────────────────────────────────────
-    useEffect(() => {
-      if (document.getElementById(ID)) return
-      const el = document.createElement('style')
-      el.id = ID
-      el.textContent = CSS
-      document.head.appendChild(el)
-      return () => document.getElementById(ID)?.remove()
-    }, [])
-  
-    // ─── Scroll-direction fix ────────────────────────────────────────────────
-    useEffect(() => {
-      // Only apply on actual touch devices
-      const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0
-      if (!isTouch) return
-  
-      const wrap = wrapRef.current
-      if (!wrap) return
-  
-      const vh         = () => window.innerHeight
-      const heroH      = () => vh()                        // hero is exactly 100vh
-      const slideCount = SLIDES.length
-  
-      let lastScrollY  = window.scrollY
-      let ticking      = false
-  
-      function applyDirection() {
-        const y    = window.scrollY
-        const hero = heroH()
-        const mbs3End = hero + slideCount * vh()
-  
-        // Are we scrolling upward?
-        const goingUp = y < lastScrollY
-  
-        if (goingUp && y >= hero - 10 && y <= mbs3End) {
-          // Scrolling up inside (or just leaving) the mbs3 zone.
-          // Switch slides to relative so momentum scrolls through cleanly.
-          if (!wrap.classList.contains('mbs3--scrolling-up')) {
-            // Snap to nearest slide boundary before switching to relative,
-            // so there's no visual jump (natural pos === sticky pos).
-            const relY       = Math.max(0, y - hero)
-            const slideIndex = Math.floor(relY / vh())
-            const snapTarget = hero + slideIndex * vh()
-  
-            if (Math.abs(y - snapTarget) > 4) {
-              // Use instant scroll — imperceptible, same direction as gesture
-              window.scrollTo({ top: snapTarget, behavior: 'instant' })
-            }
-            wrap.classList.add('mbs3--scrolling-up')
+  const wrapRef = useRef(null)
+
+  // ─── Inject styles ───────────────────────────────────────────────────────
+  useEffect(() => {
+    if (document.getElementById(ID)) return
+    const el = document.createElement('style')
+    el.id = ID
+    el.textContent = CSS
+    document.head.appendChild(el)
+    return () => document.getElementById(ID)?.remove()
+  }, [])
+
+  // ─── Scroll-direction fix ────────────────────────────────────────────────
+  useEffect(() => {
+    // Only apply on actual touch devices
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+    if (!isTouch) return
+
+    const wrap = wrapRef.current
+    if (!wrap) return
+
+    const vh         = () => window.innerHeight
+    const heroH      = () => vh()                        // hero is exactly 100vh
+    const slideCount = SLIDES.length
+
+    let lastScrollY  = window.scrollY
+    let ticking      = false
+
+    function applyDirection() {
+      const y    = window.scrollY
+      const hero = heroH()
+      const mbs3End = hero + slideCount * vh()
+
+      // Are we scrolling upward?
+      const goingUp = y < lastScrollY
+
+      if (goingUp && y >= hero - 10 && y <= mbs3End) {
+        // Scrolling up inside (or just leaving) the mbs3 zone.
+        // Switch slides to relative so momentum scrolls through cleanly.
+        if (!wrap.classList.contains('mbs3--scrolling-up')) {
+          // Snap to nearest slide boundary before switching to relative,
+          // so there's no visual jump (natural pos === sticky pos).
+          const relY       = Math.max(0, y - hero)
+          const slideIndex = Math.floor(relY / vh())
+          const snapTarget = hero + slideIndex * vh()
+
+          if (Math.abs(y - snapTarget) > 4) {
+            // Use instant scroll — imperceptible, same direction as gesture
+            window.scrollTo({ top: snapTarget, behavior: 'instant' })
           }
-        } else if (!goingUp) {
-          // Scrolling down — restore sticky stacking
-          wrap.classList.remove('mbs3--scrolling-up')
+          wrap.classList.add('mbs3--scrolling-up')
         }
-  
-        lastScrollY = y
-        ticking = false
-      }
-  
-      function onScroll() {
-        if (!ticking) {
-          // Use rAF to batch — fires before next paint, same frame as scroll
-          requestAnimationFrame(applyDirection)
-          ticking = true
-        }
-      }
-  
-      window.addEventListener('scroll', onScroll, { passive: true })
-      return () => {
-        window.removeEventListener('scroll', onScroll)
+      } else if (!goingUp) {
+        // Scrolling down — restore sticky stacking
         wrap.classList.remove('mbs3--scrolling-up')
       }
-    }, [])
-  
-    // ────────────────────────────────────────────────────────────────────────
-    const total = SLIDES.length */
 
-    return (
-        <div className="mbs3" style={{
-            height: '600vh',
-            width: '100%',
-            background: 'transparent',
-            position: 'relative',
-        }} /* ref={wrapRef} */ aria-label="Featured collection">
-            {/* {SLIDES.map((slide, i) => {
+      lastScrollY = y
+      ticking = false
+    }
+
+    function onScroll() {
+      if (!ticking) {
+        // Use rAF to batch — fires before next paint, same frame as scroll
+        requestAnimationFrame(applyDirection)
+        ticking = true
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      wrap.classList.remove('mbs3--scrolling-up')
+    }
+  }, [])
+
+  // ────────────────────────────────────────────────────────────────────────
+  const total = SLIDES.length
+
+  return (
+    <div className="mbs3" ref={wrapRef} aria-label="Featured collection">
+      {SLIDES.map((slide, i) => {
         const bgSrc  = slide.mobileBackground || slide.background
         const imgSrc = slide.mobileImg        || slide.img
 
@@ -305,7 +300,7 @@ export default function MobileStack() {
             </div>
           </div>
         )
-      })} */}
-        </div>
-    )
+      })}
+    </div>
+  )
 }
