@@ -14,84 +14,74 @@ const STRUCTURED_DATA = {
   '@context': 'https://schema.org',
   '@graph': [
     {
-      '@type': 'WineryOrVinyard',
-      '@id': 'https://napachapterone.com/#winery',
+      '@type': 'BarOrPub',
+      '@id': 'https://napachapterone.com/#bar',
       name: 'NAPA Chapter One',
-      description: 'A single-vine, single-vintage Burgundy estate wine. Chapter One — First Release, Lot 001/320. Produced in Bourgogne, France.',
+      description: 'An intimate Art Deco wine and cocktail bar in Gueliz, Marrakech. Natural and organic wines, farm-to-bar cocktails, and small plates. A project by Aziz Nahas, Benjamin Pastor, and Simone Mérette.',
       url: 'https://napachapterone.com',
       logo: 'https://napachapterone.com/napaco.svg',
-      address: { '@type': 'PostalAddress', addressRegion: 'Bourgogne', addressCountry: 'FR', addressLocality: 'Burgundy' },
-      geo: { '@type': 'GeoCoordinates', latitude: '47.0333', longitude: '4.8333' },
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: 'Gueliz',
+        addressLocality: 'Marrakech',
+        addressCountry: 'MA',
+      },
+      geo: { '@type': 'GeoCoordinates', latitude: '31.6351689', longitude: '-8.0152064' },
+      openingHoursSpecification: [
+        { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Tuesday','Wednesday','Thursday','Friday','Saturday'], opens: '17:00', closes: '01:00' },
+      ],
+      servesCuisine: ['Wine Bar', 'Cocktail Bar', 'Small Plates', 'Natural Wine'],
+      priceRange: '$$',
+      telephone: '+212 524 423 022',
+      sameAs: ['https://www.instagram.com/napachapterone'],
       offers: {
         '@type': 'Offer',
-        name: 'Reserve a Tasting — NAPA Chapter One',
+        name: 'Reserve a Table — NAPA Chapter One',
         url: 'https://napachapterone.com/reserve',
-        availability: 'https://schema.org/LimitedAvailability',
-        description: 'Exclusive tasting experiences at the estate. Limited to 320 bottles — First Release.',
+        availability: 'https://schema.org/InStock',
       },
     },
     {
-      '@type': 'Product',
-      name: 'NAPA Chapter One — MMXXIV First Release',
-      description: 'Single-vine, single-vintage Burgundy wine. Lot 001/320. Bourgogne Appellation. Harvested and bottled at 47°02N · 4°50E.',
-      brand: { '@type': 'Brand', name: 'NAPA Chapter One' },
-      releaseDate: '2024',
-      offers: { '@type': 'Offer', url: 'https://napachapterone.com/reserve', availability: 'https://schema.org/LimitedAvailability' },
+      '@type': 'LocalBusiness',
+      name: 'NAPA Chapter One',
+      description: 'Wine bar and cocktail lounge in Gueliz, Marrakech. Natural wines, farm-to-bar cocktails with Moroccan botanicals from Sanctuary Slimane, and sharing plates. Open Tue–Sat from 5pm.',
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: 'Marrakech',
+        addressRegion: 'Marrakech-Safi',
+        addressCountry: 'MA',
+      },
     },
   ],
 }
 
-const HDR_ROTATION_OFFSET = 0
-const MOUSE_PARALLAX = 0.06
-
-// Drop-in replacement for HDRBackground in HeroPage.jsx
-// Swaps the 26MB scene.hdr for /images/a1.webp (~100KB)
-// Remove the useEnvironment import from @react-three/drei if nothing else uses it.
-
-// Full drop-in replacement for HDRBackground in HeroPage.jsx
-// Uses useTexture from @react-three/drei so the texture is loaded
-// synchronously inside Suspense — no blank background flash.
-
-// ADD useTexture to your @react-three/drei import:
-// import { useGLTF, useTexture } from '@react-three/drei'
-
 function HDRBackground() {
   const { scene, gl } = useThree()
-  const sphereRef     = useRef()
-  const tex           = useTexture('/images/a1.webp')
+  const tex = useTexture('/images/a1.webp')
 
   useEffect(() => {
     if (!tex) return
-    tex.mapping    = THREE.EquirectangularReflectionMapping
     tex.colorSpace = THREE.SRGBColorSpace
     tex.needsUpdate = true
+    scene.background = tex
 
-    // Generate env map for bottle reflections
+    const envTex = tex.clone()
+    envTex.mapping    = THREE.EquirectangularReflectionMapping
+    envTex.colorSpace = THREE.SRGBColorSpace
+    envTex.needsUpdate = true
     const pmrem  = new THREE.PMREMGenerator(gl)
     pmrem.compileEquirectangularShader()
-    const envMap = pmrem.fromEquirectangular(tex).texture
-    scene.environment = envMap
+    scene.environment = pmrem.fromEquirectangular(envTex).texture
     pmrem.dispose()
+    envTex.dispose()
 
     return () => {
+      scene.background  = null
       scene.environment = null
     }
   }, [tex, scene, gl])
 
-  useFrame((state) => {
-    if (!sphereRef.current) return
-    const targetY = HDR_ROTATION_OFFSET + state.mouse.x * MOUSE_PARALLAX
-    const targetX = state.mouse.y * MOUSE_PARALLAX * 0.4
-    sphereRef.current.rotation.y += (targetY - sphereRef.current.rotation.y) * 0.04
-    sphereRef.current.rotation.x += (targetX - sphereRef.current.rotation.x) * 0.04
-  })
-
-  return (
-    <mesh ref={sphereRef} scale={[-1, 1, 1]}>
-      <sphereGeometry args={[400, 60, 40]} />
-      <meshBasicMaterial map={tex} />
-    </mesh>
-  )
+  return null
 }
 
 function BottleModel({ scrollProgress }) {
@@ -110,13 +100,7 @@ function BottleModel({ scrollProgress }) {
         child.castShadow = true
         child.receiveShadow = false
         const name = (child.name || '').toLowerCase()
-        if (
-          name.includes('label') ||
-          name.includes('sticker') ||
-          name.includes('paper') ||
-          name.includes('decal') ||
-          name.includes('etiquette')
-        ) {
+        if (name.includes('label') || name.includes('sticker') || name.includes('paper') || name.includes('decal') || name.includes('etiquette')) {
           const pos = child.getWorldPosition(new THREE.Vector3())
           labelOffset = Math.atan2(pos.x, pos.z)
         }
@@ -142,28 +126,20 @@ function BottleModel({ scrollProgress }) {
     const sp = scrollProgress.current
 
     if (isTouch.current) {
-      // Mobile: dramatic float only — no rotation, no scroll zoom, no touch influence
       const floatY  = Math.sin(elapsed * 0.5) * 0.22
       const swayX   = Math.sin(elapsed * 0.31 + 1.2) * 0.06
       const breathe = Math.sin(elapsed * 0.7 + 0.5) * 0.03
-
       group.current.position.x += (swayX - group.current.position.x) * 0.03
       group.current.position.y  = -0.5 + floatY
       group.current.position.z += (breathe - group.current.position.z) * 0.03
-
       group.current.rotation.x = 0
       group.current.rotation.y = 0
       group.current.rotation.z = 0
-
-      // Fixed scale on mobile — no scroll zoom
       group.current.scale.set(1, 1, 1)
-
     } else {
-      // Desktop: full original behaviour
       const bobAmp = 0.09 * (1 - sp * 0.8)
       const baseY  = -0.5 + Math.sin(elapsed * 0.9) * bobAmp
       group.current.position.y = baseY + sp * 0.6
-
       if (sp < 0.5) {
         if (isVisible.current) {
           const targetY = state.mouse.x * Math.PI * 0.18
@@ -179,10 +155,8 @@ function BottleModel({ scrollProgress }) {
         group.current.rotation.y = frozenRotY.current + (labelRotY.current - frozenRotY.current) * ease
         group.current.rotation.x = frozenRotX.current * (1 - ease)
       }
-
       const targetZ = sp * 100
       group.current.position.z += (targetZ - group.current.position.z) * 0.06
-
       const targetScale = 1 + sp * 16
       group.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.06)
     }
@@ -240,7 +214,7 @@ function Vignette() {
   return (
     <div aria-hidden="true" style={{
       position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none',
-      background: 'radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(40, 0, 5, 0.55) 100%)',
+      background: 'radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(10,0,2,0.6) 100%)',
     }} />
   )
 }
@@ -249,9 +223,10 @@ function HeroOverlay() {
   const { t } = useTranslation()
   const fontSerif = "'Cormorant Garamond', 'Cormorant', Georgia, 'Times New Roman', serif"
   const fontSans  = "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif"
-  const wineRed   = '#A11C24'
-  const inkDark   = '#1a1614'
-  const parchment = '#faf6ef'
+  const wineRed   = '#8b1d1f'
+  const cream     = '#faf6ef'
+  const creamy60  = 'rgba(250,246,239,0.6)'
+  const creamy45  = 'rgba(250,246,239,0.45)'
 
   const [isMobile, setIsMobile] = useState(
     typeof window !== 'undefined' ? window.innerWidth < 640 : false
@@ -264,18 +239,16 @@ function HeroOverlay() {
 
   return (
     <div aria-hidden="false" style={{ position: 'absolute', inset: 0, zIndex: 4, pointerEvents: 'none' }}>
+
       <motion.div
         initial={{ opacity: 0, x: 24 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 2.8, duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
         style={{
-          position: 'absolute',
-          top: '50%',
-          transform: 'translateY(-50%)',
+          position: 'absolute', top: '50%', transform: 'translateY(-50%)',
           right: isMobile ? '1rem' : '3vw',
           left: isMobile ? '1rem' : '55%',
-          display: 'flex',
-          flexDirection: 'column',
+          display: 'flex', flexDirection: 'column',
           alignItems: isMobile ? 'center' : 'flex-end',
           gap: '22px',
           textAlign: isMobile ? 'center' : 'right',
@@ -283,59 +256,49 @@ function HeroOverlay() {
         }}
       >
         <h1 style={{
-          fontFamily: fontSerif,
-          fontStyle: 'italic',
+          fontFamily: fontSerif, fontStyle: 'italic', fontWeight: 400,
           fontSize: isMobile ? '17px' : 'clamp(19px, 1.8vw, 26px)',
-          fontWeight: 400,
-          lineHeight: 1.6,
-          color: inkDark,
-          margin: 0,
-          letterSpacing: '0.02em',
+          lineHeight: 1.6, color: cream, margin: 0, letterSpacing: '0.02em',
           maxWidth: isMobile ? '100%' : '380px',
+          textShadow: '0 1px 12px rgba(0,0,0,0.5)',
         }}>
-          {t('hero.taglinePre', 'A single vine. A single vintage.')}{' '}
-          <span style={{ color: wineRed }}>{t('hero.subtitle', 'Chapter One')}</span>{' '}
-          {t('hero.taglinePost', 'begins now.')}
+          {t('hero.taglinePre')}<br/>
+          {t('hero.taglinePost')}
         </h1>
 
-        <div style={{
-          display: 'flex',
-          flexDirection: isMobile ? 'column' : 'row',
-          gap: '12px',
-          alignItems: isMobile ? 'center' : 'flex-end',
-        }}>
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '12px', alignItems: isMobile ? 'center' : 'flex-end' }}>
           <Link to="/reserve" aria-label={t('hero.ctaPrimaryAriaLabel')} style={{ textDecoration: 'none' }}>
             <button style={{
               fontFamily: fontSans, fontSize: '10px', fontWeight: 500,
               letterSpacing: '3px', textTransform: 'uppercase',
-              padding: '12px 24px', background: wineRed, color: parchment,
+              padding: '12px 24px', background: wineRed, color: cream,
               border: 'none', borderRadius: 0, cursor: 'pointer',
               transition: 'background 0.2s ease', whiteSpace: 'nowrap',
             }}
-              onMouseEnter={e => { e.currentTarget.style.background = '#7a1318' }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#b03040' }}
               onMouseLeave={e => { e.currentTarget.style.background = wineRed }}
             >
-              {t('hero.ctaPrimary', 'Reserve a Tasting')}
+              {t('hero.ctaPrimary')}
             </button>
           </Link>
-
           <Link to="/cellar" aria-label={t('hero.ctaGhostAriaLabel')} style={{ textDecoration: 'none' }}>
             <button style={{
               fontFamily: fontSans, fontSize: '10px', fontWeight: 500,
               letterSpacing: '3px', textTransform: 'uppercase',
-              padding: '12px 24px', background: 'transparent', color: inkDark,
-              border: `1px solid ${inkDark}`, borderRadius: 0, cursor: 'pointer',
-              transition: 'background 0.2s ease, color 0.2s ease', whiteSpace: 'nowrap',
+              padding: '12px 24px', background: 'transparent', color: cream,
+              border: `1px solid rgba(250,246,239,0.55)`, borderRadius: 0, cursor: 'pointer',
+              transition: 'background 0.2s ease, color 0.2s ease, border-color 0.2s ease', whiteSpace: 'nowrap',
             }}
-              onMouseEnter={e => { e.currentTarget.style.background = inkDark; e.currentTarget.style.color = parchment }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = inkDark }}
+              onMouseEnter={e => { e.currentTarget.style.background = cream; e.currentTarget.style.color = '#1a1614'; e.currentTarget.style.borderColor = cream }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = cream; e.currentTarget.style.borderColor = 'rgba(250,246,239,0.55)' }}
             >
-              {t('hero.ctaGhost', 'Discover the Vintage')}
+              {t('hero.ctaGhost')}
             </button>
           </Link>
         </div>
       </motion.div>
 
+      {/* Bottom-left: location + hours */}
       <motion.address
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -348,19 +311,20 @@ function HeroOverlay() {
           display: 'flex', flexDirection: 'column', gap: '3px',
         }}
       >
-        <span style={{ fontFamily: fontSans, fontSize: '10px', fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: inkDark }}>
-          {t('hero.estateLabel', 'The Estate')}
+        <span style={{ fontFamily: fontSans, fontSize: '10px', fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: cream }}>
+          {t('hero.estateLabel')}
         </span>
-        <span style={{ fontFamily: fontSans, fontSize: '10px', fontWeight: 400, letterSpacing: '3px', textTransform: 'uppercase', color: 'rgba(26,22,20,0.65)' }}>
-          {t('hero.estateLocation', 'Bourgogne, France')}
+        <span style={{ fontFamily: fontSans, fontSize: '10px', fontWeight: 400, letterSpacing: '3px', textTransform: 'uppercase', color: creamy60 }}>
+          {t('hero.estateLocation')}
         </span>
         {!isMobile && (
-          <span style={{ fontFamily: fontSans, fontSize: '10px', fontWeight: 400, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(26,22,20,0.5)' }}>
-            47°02N · 4°50E
+          <span style={{ fontFamily: fontSans, fontSize: '10px', fontWeight: 400, letterSpacing: '2px', textTransform: 'uppercase', color: creamy45 }}>
+            {t('hero.estateHours')}
           </span>
         )}
       </motion.address>
 
+      {/* Bottom-right: opening year + tagline — desktop only */}
       {!isMobile && (
         <motion.aside
           initial={{ opacity: 0 }}
@@ -373,15 +337,16 @@ function HeroOverlay() {
           }}
         >
           <span style={{ fontFamily: fontSerif, fontSize: 'clamp(38px, 4.5vw, 56px)', fontWeight: 600, letterSpacing: '0.04em', color: wineRed, lineHeight: 1 }}>
-            MMXXIV
+            MMXXVI
           </span>
           <span style={{ display: 'block', width: '40px', height: '1px', background: wineRed, alignSelf: 'flex-end' }} />
-          <span style={{ fontFamily: fontSans, fontSize: '10px', fontWeight: 400, letterSpacing: '2.5px', textTransform: 'uppercase', color: 'rgba(26,22,20,0.6)' }}>
-            {t('hero.vintageCaption', 'First Release · Lot 001 / 320')}
+          <span style={{ fontFamily: fontSans, fontSize: '10px', fontWeight: 400, letterSpacing: '2.5px', textTransform: 'uppercase', color: creamy60 }}>
+            {t('hero.vintageCaption')}
           </span>
         </motion.aside>
       )}
 
+      {/* Scroll cue — desktop only */}
       {!isMobile && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -393,13 +358,13 @@ function HeroOverlay() {
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
           }}
         >
-          <span style={{ fontFamily: fontSans, fontSize: '9px', fontWeight: 500, letterSpacing: '3px', textTransform: 'uppercase', color: 'white' }}>
-            {t('hero.scroll', 'Scroll')}
+          <span style={{ fontFamily: fontSans, fontSize: '9px', fontWeight: 500, letterSpacing: '3px', textTransform: 'uppercase', color: creamy60 }}>
+            {t('hero.scroll')}
           </span>
           <motion.span
             animate={{ opacity: [1, 0.1, 1] }}
             transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
-            style={{ display: 'block', width: '1px', height: '40px', background: `linear-gradient(to bottom, white, transparent)` }}
+            style={{ display: 'block', width: '1px', height: '40px', background: `linear-gradient(to bottom, ${cream}, transparent)` }}
           />
         </motion.div>
       )}
@@ -417,7 +382,7 @@ export default function HeroPage() {
     <>
       <Helmet>
         <html lang={lang} />
-        <title>{t('seo.title', 'NAPA Chapter One — Single-Vine Burgundy Wine | First Release MMXXIV')}</title>
+        <title>{t('seo.title')}</title>
         <meta name="description" content={t('seo.description')} />
         <meta name="keywords"    content={t('seo.keywords')} />
         <link rel="canonical"    href="https://napachapterone.com/" />
@@ -435,23 +400,18 @@ export default function HeroPage() {
         <meta name="twitter:description" content={t('seo.ogDescription')} />
         <meta name="twitter:image"       content="https://napachapterone.com/og-image.jpg" />
         <meta name="twitter:image:alt"   content={t('seo.ogImageAlt')} />
-        <meta name="geo.region"    content="FR-21" />
-        <meta name="geo.placename" content="Bourgogne, France" />
-        <meta name="geo.position"  content="47.0333;4.8333" />
-        <meta name="ICBM"          content="47.0333, 4.8333" />
+        <meta name="geo.region"    content="MA-09" />
+        <meta name="geo.placename" content="Marrakech, Morocco" />
+        <meta name="geo.position"  content="31.6351689;-8.0152064" />
+        <meta name="ICBM"          content="31.6351689, -8.0152064" />
         <meta name="robots"        content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
         <meta name="author"        content="NAPA Chapter One" />
         <meta name="theme-color"   content="#A11C24" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@400;500;700&display=swap"
-          rel="stylesheet"
-        />
+        <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
         <script type="application/ld+json">{JSON.stringify(STRUCTURED_DATA)}</script>
       </Helmet>
 
       <main id="main-content">
-
-        {/* Hero — overflow:hidden scoped here only */}
         <section
           aria-label={t('hero.sectionAriaLabel')}
           style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}
@@ -459,16 +419,10 @@ export default function HeroPage() {
           <Canvas
             shadows
             camera={{ position: [0, 1.5, 20], fov: 50 }}
-            gl={{
-              antialias:           true,
-              toneMapping:         THREE.ACESFilmicToneMapping,
-              toneMappingExposure: 1.1,
-            }}
+            gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.1 }}
             dpr={[1, Math.min(window.devicePixelRatio, 2)]}
             style={{ position: 'absolute', inset: 0, zIndex: 1 }}
             aria-hidden="true"
-            // Disable all touch events on the canvas on mobile —
-            // prevents the 3D scene stealing scroll/touch from the page
             eventSource={isTouch.current ? null : undefined}
             events={isTouch.current ? () => ({}) : undefined}
           >
@@ -477,20 +431,12 @@ export default function HeroPage() {
               <ResponsiveCamera />
               <ambientLight intensity={0.3} color="#ffccd5" />
               <directionalLight
-                position={[3, 14, 8]}
-                intensity={3.5}
-                color="#fff5e0"
-                castShadow
-                shadow-mapSize-width={2048}
-                shadow-mapSize-height={2048}
-                shadow-camera-near={0.5}
-                shadow-camera-far={40}
-                shadow-camera-left={-8}
-                shadow-camera-right={8}
-                shadow-camera-top={8}
-                shadow-camera-bottom={-8}
-                shadow-bias={-0.0004}
-                shadow-radius={6}
+                position={[3, 14, 8]} intensity={3.5} color="#fff5e0" castShadow
+                shadow-mapSize-width={2048} shadow-mapSize-height={2048}
+                shadow-camera-near={0.5} shadow-camera-far={40}
+                shadow-camera-left={-8} shadow-camera-right={8}
+                shadow-camera-top={8} shadow-camera-bottom={-8}
+                shadow-bias={-0.0004} shadow-radius={6}
               />
               <directionalLight position={[5, 2, 4]}   intensity={0.8} color="#ffb870" castShadow={false} />
               <directionalLight position={[-5, 6, -8]} intensity={1.4} color="#7baeff" castShadow={false} />
@@ -498,18 +444,13 @@ export default function HeroPage() {
               <BottleModel scrollProgress={scrollProgress} />
             </Suspense>
           </Canvas>
-
           <Vignette />
           <FilmGrain />
           <HeroOverlay />
         </section>
 
-        {/* MobileStack — outside overflow:hidden, sticky works against page */}
         <MobileStack />
-
-        {/* Desktop scroll section — hides itself on mobile via CSS */}
         <ScrollSection />
-
       </main>
     </>
   )
