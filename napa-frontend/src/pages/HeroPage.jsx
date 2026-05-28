@@ -70,7 +70,7 @@ if (!IS_TOUCH) _loadThree()
 
 function HDRBackground() {
   const { scene, gl } = useThree()
-  const tex = useTexture('/images/a1.webp')
+  const tex = useTexture('/images/cloth1.jpg')
 
   useEffect(() => {
     if (!tex) return
@@ -475,8 +475,10 @@ export default function HeroPage() {
           <HeroOverlay />
         </section>
 
+        
         <MobileStack />
         <ScrollSection />
+        <ImageGallery/>
       </main>
     </>
   )

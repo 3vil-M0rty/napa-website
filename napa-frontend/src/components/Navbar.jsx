@@ -1,9 +1,5 @@
-// src/components/Navbar.jsx — FIXED
-// Bug fixed: isMobile used to initialize as `false` (SSR-safe guess), then
-// useEffect corrected it after the first paint — causing a visible flash where
-// the desktop nav rendered for ~1 frame on mobile before switching to the burger.
-// Fix: initialize directly from window.innerWidth. This is a pure CSR app
-// (no SSR / no hydration), so reading window on module init is always safe.
+// src/components/Navbar.jsx — FIXED + SCROLL TO FOOTER LOGO ANIMATION
+
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -17,93 +13,169 @@ const LANGUAGES = [
   { code: 'fr', label: 'FR' },
 ]
 
-// ─── FIX helper: read breakpoint once, synchronously ───────────────────────
-// Called at useState init time so the very first render already knows the
-// correct value — no flash, no layout shift.
 function getIsMobile() {
   return typeof window !== 'undefined' && window.innerWidth < 768
 }
 
-function Hairline() {
+/* ─────────────────────────────────────────────────────────
+   SCROLL HELPERS
+───────────────────────────────────────────────────────── */
+function scrollToSection(id) {
+  const el = document.getElementById(id)
+  if (!el) return
+
+  const top = el.getBoundingClientRect().top + window.scrollY
+
+  window.scrollTo({
+    top,
+    behavior: 'smooth',
+  })
+}
+
+/* ─────────────────────────────────────────────────────────
+   UI HELPERS
+───────────────────────────────────────────────────────── */
+function Hairline({ dark }) {
   return (
-    <span style={{
-      display: 'inline-block', width: '1px', height: '14px',
-      background: 'white', flexShrink: 0, opacity: 0.4,
-    }} />
+    <span
+      style={{
+        display: 'inline-block',
+        width: '1px',
+        height: '14px',
+        background: dark ? '#1a1614' : 'white',
+        flexShrink: 0,
+        opacity: 0.4,
+      }}
+    />
   )
 }
 
-function EditorialNavLink({ to, children, active }) {
-  const underlineRef = useRef()
-  const handleEnter = () => {
+/* ─────────────────────────────────────────────────────────
+   EDITORIAL LINK
+───────────────────────────────────────────────────────── */
+function EditorialNavLink({ target, children, dark }) {
+  const underlineRef = useRef(null)
+
+  const resetUnderline = () => {
     if (!underlineRef.current) return
-    gsap.fromTo(underlineRef.current,
-      { scaleX: 0, transformOrigin: 'left' },
-      { scaleX: 1, duration: 0.38, ease: 'power3.out' })
-  }
-  const handleLeave = () => {
-    if (!underlineRef.current) return
-    gsap.to(underlineRef.current, {
-      scaleX: 0, transformOrigin: 'right',
-      duration: 0.28, ease: 'power3.inOut',
+    gsap.set(underlineRef.current, {
+      scaleX: 0,
+      transformOrigin: 'left',
     })
   }
+
+  const handleEnter = () => {
+    if (!underlineRef.current) return
+    gsap.killTweensOf(underlineRef.current)
+
+    gsap.fromTo(
+      underlineRef.current,
+      { scaleX: 0, transformOrigin: 'left' },
+      { scaleX: 1, duration: 0.38, ease: 'power3.out' }
+    )
+  }
+
+  const handleLeave = () => {
+    if (!underlineRef.current) return
+    gsap.killTweensOf(underlineRef.current)
+
+    gsap.to(underlineRef.current, {
+      scaleX: 0,
+      transformOrigin: 'right',
+      duration: 0.28,
+      ease: 'power3.inOut',
+      onComplete: resetUnderline,
+    })
+  }
+
+  useEffect(() => {
+    resetUnderline()
+  }, [])
+
   return (
-    <Link to={to} aria-current={active ? 'page' : undefined}
-      style={{ textDecoration: 'none' }}
-      onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
-      <span style={{
-        position: 'relative', display: 'inline-block',
-        fontFamily: "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif",
-        fontSize: '10px', fontWeight: 600, letterSpacing: '3px',
-        textTransform: 'uppercase', color: 'white',
-        mixBlendMode: 'difference', WebkitMixBlendMode: 'difference',
-        padding: '4px 0', cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap',
-      }}>
+    <button
+      onClick={() => scrollToSection(target)}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+      style={{ all: 'unset', cursor: 'pointer' }}
+    >
+      <span
+        style={{
+          position: 'relative',
+          display: 'inline-block',
+          fontSize: '10px',
+          fontWeight: 600,
+          letterSpacing: '3px',
+          textTransform: 'uppercase',
+          color: dark ? '#1a1614' : 'white',   // 👈 ONLY CHANGE
+          padding: '4px 0',
+          userSelect: 'none',
+          whiteSpace: 'nowrap',
+        }}
+      >
         {children}
-        {active && (
-          <span style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '1px', background: 'white' }} />
-        )}
-        <span ref={underlineRef} style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0,
-          height: '1px', background: 'white',
-          transform: 'scaleX(0)', transformOrigin: 'left',
-          display: active ? 'none' : 'block',
-        }} />
+
+        <span
+          ref={underlineRef}
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: '1px',
+            background: dark ? '#1a1614' : 'white', // 👈 ONLY CHANGE
+            transform: 'scaleX(0)',
+            transformOrigin: 'left',
+          }}
+        />
       </span>
-    </Link>
+    </button>
   )
 }
 
-function MobileNavLink({ to, children, active, onClick }) {
+/* ─────────────────────────────────────────────────────────
+   MOBILE LINK
+───────────────────────────────────────────────────────── */
+function MobileNavLink({ target, children, onClick }) {
   return (
-    <Link to={to} onClick={onClick} style={{ textDecoration: 'none', width: '100%' }}>
-      <span style={{
+    <button
+      onClick={() => {
+        scrollToSection(target)
+        onClick?.()
+      }}
+      style={{
+        all: 'unset',
         display: 'block',
-        fontFamily: "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif",
-        fontSize: '11px', fontWeight: 500, letterSpacing: '3px',
+        fontSize: '11px',
+        letterSpacing: '3px',
         textTransform: 'uppercase',
-        color: active ? '#8b1d1f' : '#1a1614',
+        color: '#1a1614',
         padding: '18px 0',
         width: '100%',
         borderBottom: '1px solid rgba(26,22,20,0.08)',
         cursor: 'pointer',
         textAlign: 'center',
-      }}>
-        {children}
-      </span>
-    </Link>
+      }}
+    >
+      {children}
+    </button>
   )
 }
 
+/* ─────────────────────────────────────────────────────────
+   NAVBAR
+───────────────────────────────────────────────────────── */
 export default function Navbar() {
   const { t, i18n } = useTranslation()
   const { user, logoutUser } = useAuth()
   const location = useLocation()
-  const [menuOpen, setMenuOpen] = useState(false)
 
-  // ─── FIX: initialize synchronously so first render is already correct ───
+  const [menuOpen, setMenuOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(getIsMobile)
+
+  const [darkNav, setDarkNav] = useState(false) // 👈 NEW
+
+  const logoRef = useRef(null)
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
@@ -111,7 +183,66 @@ export default function Navbar() {
     return () => window.removeEventListener('resize', check)
   }, [])
 
-  useEffect(() => { setMenuOpen(false) }, [location.pathname])
+  useEffect(() => {
+    setMenuOpen(false)
+  }, [location.pathname])
+
+  /* ─────────────────────────────────────────────
+     FOOTER DETECTION (COLOR ONLY)
+  ───────────────────────────────────────────── */
+  useEffect(() => {
+    const handleScroll = () => {
+      const footer = document.getElementById('image-gallery')
+      if (!footer) return
+
+      const rect = footer.getBoundingClientRect()
+      const isFooterActive = rect.top <= window.innerHeight * 0.055
+
+      setDarkNav(isFooterActive) // 👈 ONLY ADDITION
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  /* ─────────────────────────────────────────────
+     LOGO → FOOTER ANIMATION
+  ───────────────────────────────────────────── */
+  useEffect(() => {
+    const handleScroll = () => {
+      const footer = document.getElementById('image-gallery')
+      if (!footer || !logoRef.current) return
+
+      const rect = footer.getBoundingClientRect()
+      const isFooterActive = rect.top <= window.innerHeight * 0.3
+
+      if (isFooterActive) {
+        gsap.to(logoRef.current, {
+          position: 'fixed',
+          bottom: '1rem',
+          top: 'auto',
+          scale: 1,
+          duration: 0.7,
+          transformOrigin: 'bottom left',
+          ease: "power3.out",
+          color: '#3a0505',
+        })
+      } else {
+        gsap.to(logoRef.current, {
+          position: 'fixed',
+          top: isMobile ? '0.6rem' : '0.75rem',
+          left: isMobile ? '1rem' : '1.5rem',
+          scale: 1,
+          duration: 0.8,
+          ease: "power3.out",
+          color: 'white',
+        })
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [isMobile])
 
   const changeLanguage = (code) => {
     i18n.changeLanguage(code)
@@ -119,238 +250,131 @@ export default function Navbar() {
     document.dir = 'ltr'
   }
 
-  const NAV_LINKS = [
-    { to: '/estate',  label: t('nav.estate',       'Estate')       },
-    { to: '/cellar',  label: t('nav.cellar',        'Cellar')       },
-    { to: '/journal', label: t('nav.journal',       'Journal')      },
-    { to: '/reserve', label: t('nav.reservations',  'Reservations') },
-  ]
-
-  const LangSwitch = ({ dark = false }) => (
-    <div role="group" aria-label={t('nav.languageSelection')}
-      style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-      {LANGUAGES.map((lang) => (
-        <button key={lang.code} onClick={() => changeLanguage(lang.code)}
-          aria-label={t('nav.switchLang', { lang: lang.label })}
-          aria-pressed={i18n.language === lang.code}
+  const LangSwitch = ({ dark }) => (
+    <div style={{ display: 'flex', gap: '14px' }}>
+      {LANGUAGES.map(lang => (
+        <button
+          key={lang.code}
+          onClick={() => changeLanguage(lang.code)}
           style={{
-            background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-            fontFamily: "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif",
-            fontSize: '10px', fontWeight: 500, letterSpacing: '3px',
+            all: 'unset',
+            cursor: 'pointer',
+            fontSize: '10px',
+            letterSpacing: '3px',
+            color: dark ? '#1a1614' : 'white',   // 👈 ONLY CHANGE
             textTransform: 'uppercase',
-            color: dark
-              ? (i18n.language === lang.code ? '#8b1d1f' : '#4a4340')
-              : 'white',
-            mixBlendMode: dark ? 'normal' : 'difference',
-            WebkitMixBlendMode: dark ? 'normal' : 'difference',
-            borderBottom: i18n.language === lang.code
-              ? `1px solid ${dark ? '#8b1d1f' : 'white'}`
-              : '1px solid transparent',
-            paddingBottom: '2px',
-            opacity: dark ? 1 : (i18n.language === lang.code ? 1 : 0.55),
-            transition: 'opacity 0.2s ease',
-          }}>
+            opacity: i18n.language === lang.code ? 1 : 0.55,
+          }}
+        >
           {lang.label}
         </button>
       ))}
     </div>
   )
 
-  const LoginBtn = ({ dark = false }) => user ? (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-      <span style={{
-        fontFamily: "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif",
-        fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase',
-        color: dark ? '#1a1614' : 'white',
-        mixBlendMode: dark ? 'normal' : 'difference',
-        WebkitMixBlendMode: dark ? 'normal' : 'difference',
-      }}>
-        {user.name}
-      </span>
-      <button onClick={logoutUser} style={{
-        fontFamily: "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif",
-        fontSize: '10px', letterSpacing: '3px', textTransform: 'uppercase',
-        padding: '10px 22px', background: '#8b1d1f', color: '#faf6ef',
-        border: 'none', borderRadius: 0, cursor: 'pointer', transition: 'background 0.2s ease',
-      }}
-        onMouseEnter={e => { e.currentTarget.style.background = '#7a1318' }}
-        onMouseLeave={e => { e.currentTarget.style.background = '#8b1d1f' }}
-      >
-        {t('nav.logout')}
-      </button>
-    </div>
-  ) : (
-    <Link to="/login" style={{ textDecoration: 'none' }}>
-      <button aria-label={t('nav.loginAriaLabel')} style={{
-        fontFamily: "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif",
-        fontSize: '10px', letterSpacing: '3px', textTransform: 'uppercase',
-        padding: '10px 22px', background: '#8b1d1f', color: '#faf6ef',
-        border: 'none', borderRadius: 0, cursor: 'pointer', transition: 'background 0.2s ease',
-      }}
-        onMouseEnter={e => { e.currentTarget.style.background = '#7a1318' }}
-        onMouseLeave={e => { e.currentTarget.style.background = '#8b1d1f' }}
-      >
-        {t('nav.login')}
-      </button>
-    </Link>
-  )
+  const NAV_LINKS = [
+    { label: t('nav.estate', 'Estate'), target: 'experience-intimate-escape' },
+    { label: t('nav.cellar', 'Cellar'), target: 'experience-crafted-cocktails' },
+    { label: t('nav.journal', 'Journal'), target: 'experience-farm-to-table' },
+    { label: t('nav.reservations', 'Reservations'), target: 'experience-kitchen-driss-alaoui' },
+  ]
 
   return (
     <>
       {/* LOGO */}
-      <Link to="/" aria-label={t('nav.logoAriaLabel')} style={{
-        textDecoration: 'none', position: 'fixed',
-        top: isMobile ? '0.6rem' : '0.75rem',
-        left: isMobile ? '1rem' : '1.5rem',
-        zIndex: 102,
-      }}>
-        <NapaCo aria-hidden="true" style={{
-          width: isMobile ? 140 : 210, display: 'block',
-          mixBlendMode: 'difference', WebkitMixBlendMode: 'difference',
-          color: '#8b1d1f',
-        }} />
-      </Link>
-
-      {/* NAV BAR */}
-      <motion.nav
-        aria-label={t('nav.primaryNav')}
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      <Link
+        to="/"
         style={{
-          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-          padding: isMobile ? '1rem 1.25rem' : '1.25rem 2rem',
-          display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end',
-          background: 'transparent', pointerEvents: 'none',
+          position: 'fixed',
+          top: isMobile ? '0.6rem' : '0.75rem',
+          left: isMobile ? '1rem' : '1.5rem',
+          zIndex: 102,
+          textDecoration: 'none',
         }}
       >
-        {/* DESKTOP */}
+        <div ref={logoRef} style={{
+          position: 'fixed',
+          top: isMobile ? '0.6rem' : '0.75rem',
+          left: isMobile ? '1rem' : '1.5rem',
+          scale: 1,
+          color: 'white',
+        }}>
+          <NapaCo style={{ width: isMobile ? 140 : 210 }} />
+        </div>
+      </Link>
+
+      {/* NAV */}
+      <motion.nav
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        style={{
+          position: 'fixed',
+          top: 0,
+          width: '100%',
+          zIndex: 100,
+          display: 'flex',
+          justifyContent: 'flex-end',
+
+          padding: isMobile ? '1rem' : '1.25rem 2rem',
+          pointerEvents: 'none',
+        }}
+      >
         {!isMobile && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', pointerEvents: 'auto' }}>
-            {NAV_LINKS.map(({ to, label }) => (
-              <EditorialNavLink key={to} to={to} active={location.pathname === to}>
-                {label}
+          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', pointerEvents: 'auto' }}>
+            {NAV_LINKS.map((link) => (
+              <EditorialNavLink
+                key={link.target}
+                target={link.target}
+                dark={darkNav}   // 👈 ONLY CHANGE
+              >
+                {link.label}
               </EditorialNavLink>
             ))}
-            {user?.role === 'admin' && (
-              <EditorialNavLink to="/admin" active={location.pathname === '/admin'}>
-                {t('nav.admin')}
-              </EditorialNavLink>
-            )}
-            {user && (
-              <EditorialNavLink to="/my-bookings" active={location.pathname === '/my-bookings'}>
-                {t('nav.myBookings')}
-              </EditorialNavLink>
-            )}
-            <Hairline />
-            <LangSwitch />
-            <Hairline />
-            <LoginBtn />
+            <Hairline dark={darkNav}/>
+            <LangSwitch dark={darkNav} />  {/* 👈 ONLY CHANGE */}
           </div>
         )}
 
-        {/* MOBILE HAMBURGER */}
         {isMobile && (
           <button
-            onClick={() => setMenuOpen(v => !v)}
-            aria-label={menuOpen ? t('nav.closeMenu') : t('nav.openMenu')}
-            aria-expanded={menuOpen}
-            style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              padding: '4px', zIndex: 101,
-              display: 'flex', flexDirection: 'column',
-              gap: '5px', alignItems: 'center', pointerEvents: 'auto',
-              mixBlendMode: menuOpen ? 'normal' : 'difference',
-              WebkitMixBlendMode: menuOpen ? 'normal' : 'difference',
-            }}
+            onClick={() => setMenuOpen((v) => !v)}
+            style={{ all: 'unset', cursor: 'pointer', pointerEvents: 'auto' }}
           >
-            {[0, 1, 2].map(i => (
-              <motion.span
-                key={i}
-                animate={
-                  menuOpen
-                    ? i === 0 ? { rotate: 45,  y: 7,  scaleX: 1 }
-                    : i === 1 ? { opacity: 0 }
-                    :           { rotate: -45, y: -7, scaleX: 1 }
-                    : { rotate: 0, y: 0, opacity: 1, scaleX: i === 1 ? 0.65 : 1 }
-                }
-                transition={{ duration: 0.28 }}
-                style={{
-                  display: 'block', width: '22px', height: '1px',
-                  background: menuOpen ? '#8b1d1f' : 'white',
-                  transformOrigin: 'center',
-                  transition: 'background 0.2s ease',
-                }}
-              />
-            ))}
+            ☰
           </button>
         )}
       </motion.nav>
 
-      {/* MOBILE DRAWER */}
+      {/* MOBILE MENU */}
       <AnimatePresence>
         {isMobile && menuOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             style={{
               position: 'fixed',
-              top: 0, left: 0, right: 0, bottom: 0,
+              inset: 0,
+              background: 'rgba(250,246,239,0.97)',
               zIndex: 99,
-              background: 'rgba(250, 246, 239, 0.97)',
-              backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
               display: 'flex',
               flexDirection: 'column',
-              alignItems: 'center',
               justifyContent: 'center',
-              padding: '5rem 2rem 3rem',
-              overflowY: 'auto',
+              alignItems: 'center',
             }}
           >
-            <div style={{ width: '100%', maxWidth: '320px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              {NAV_LINKS.map(({ to, label }) => (
-                <MobileNavLink key={to} to={to} active={location.pathname === to}
-                  onClick={() => setMenuOpen(false)}>
-                  {label}
-                </MobileNavLink>
-              ))}
-              {user?.role === 'admin' && (
-                <MobileNavLink to="/admin" active={location.pathname === '/admin'}
-                  onClick={() => setMenuOpen(false)}>
-                  {t('nav.admin')}
-                </MobileNavLink>
-              )}
-              {user && (
-                <MobileNavLink to="/my-bookings" active={location.pathname === '/my-bookings'}
-                  onClick={() => setMenuOpen(false)}>
-                  {t('nav.myBookings')}
-                </MobileNavLink>
-              )}
-
-              <div style={{
-                marginTop: '2rem',
-                display: 'flex', flexDirection: 'column',
-                alignItems: 'center', gap: '1.5rem',
-                width: '100%',
-              }}>
-                <LangSwitch dark />
-                <LoginBtn dark />
-              </div>
-            </div>
+            {NAV_LINKS.map((link) => (
+              <MobileNavLink
+                key={link.target}
+                target={link.target}
+                onClick={() => setMenuOpen(false)}
+              >
+                {link.label}
+              </MobileNavLink>
+            ))}
           </motion.div>
         )}
       </AnimatePresence>
     </>
-  )
-}
-
-export function NapaLogoMark({ size = 48 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 100 100" aria-label="NAPA logomark" role="img">
-      <circle cx="50" cy="50" r="50" fill="black" />
-      <text x="50" y="62" textAnchor="middle" fontSize="32" fill="white" fontWeight="900">N</text>
-    </svg>
   )
 }

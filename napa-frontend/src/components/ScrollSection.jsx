@@ -20,50 +20,50 @@ export const SLIDES = [
     mobileBackground: '/images/a1.webp',
     titleKey:         'experience.slides.one.title',
     subKey:           'experience.slides.one.sub',
-    img:              '/images/a1.webp',
-    mobileImg:        '/images/a1.webp',
+    img:              '/images/a0.webp',
+    mobileImg:        '/images/a0.webp',
     altKey:           'experience.slides.one.imgAlt',
     altFallback:      'Intimate candlelit dining room at NAPA Chapter One',
     bgAlt:            'NAPA Chapter One dining room',
     slug:             'intimate-escape',
   },
   {
-    background:       '/images/chef.webp',
+    background:       '/images/food.webp',
     mobileBackground: '/images/chef.webp',
     titleKey:         'experience.slides.six.title',
     subKey:           'experience.slides.six.sub',
     img:              '/images/chef.webp',
-    mobileImg:        '/images/chef.webp',
+    mobileImg:        '/images/food.webp',
     altKey:           'experience.slides.six.imgAlt',
     altFallback:      'Chef Driss Alaoui plating seasonal farm-to-table dishes at NAPA Chapter One',
     bgAlt:            'NAPA Chapter One kitchen',
     slug:             'kitchen-driss-alaoui',
   },
   {
-    background:       '/images/chef.webp',
-    mobileBackground: '/images/chef.webp',
+    background:       '/images/drinkb.webp',
+    mobileBackground: '/images/drinkb.webp',
     titleKey:         'experience.slides.two.title',
     subKey:           'experience.slides.two.sub',
-    img:              '/images/chef.webp',
-    mobileImg:        '/images/chef.webp',
+    img:              '/images/drinks.webp',
+    mobileImg:        '/images/drinks.webp',
     altKey:           'experience.slides.two.imgAlt',
     altFallback:      'Handcrafted cocktails with Moroccan botanicals at NAPA Chapter One wine bar',
     bgAlt:            'NAPA Chapter One cocktail bar',
     slug:             'crafted-cocktails',
   },
   {
-    background:       '/images/chef.webp',
-    mobileBackground: '/images/chef.webp',
+    background:       '/images/slimane.webp',
+    mobileBackground: '/images/slimane.webp',
     titleKey:         'experience.slides.three.title',
     subKey:           'experience.slides.three.sub',
-    img:              '/images/chef.webp',
-    mobileImg:        '/images/chef.webp',
+    img:              '/images/slima.webp',
+    mobileImg:        '/images/slima.webp',
     altKey:           'experience.slides.three.imgAlt',
     altFallback:      'Sanctuary Slimane farm ingredients used in NAPA Chapter One seasonal menu',
     bgAlt:            'Sanctuary Slimane farm',
     slug:             'farm-to-table',
   },
-  {
+  /* {
     background:       '/images/chef.webp',
     mobileBackground: '/images/chef.webp',
     titleKey:         'experience.slides.four.title',
@@ -86,7 +86,7 @@ export const SLIDES = [
     altFallback:      'Late-night wine listening sessions and aperitivo at NAPA Chapter One',
     bgAlt:            'NAPA Chapter One evening ambiance',
     slug:             'late-night-sessions',
-  },
+  }, */
 ]
 
 /* ─── JSON-LD ────────────────────────────────────────────────────────────── */
@@ -145,7 +145,7 @@ const css = `
     height: 130%;
     top: -15%;
     object-fit: cover;
-    filter: brightness(0.42) saturate(1.1);
+    filter: brightness(0.3) blur(2px);
     pointer-events: none;
   }
 
@@ -378,7 +378,7 @@ export default function ScrollSection() {
                 alt={s.bgAlt}
                 width="1920"
                 height="1080"
-                loading="eager"
+                loading="lazy"
                 decoding="async"
               />
             </div>
@@ -403,7 +403,7 @@ export default function ScrollSection() {
                         alt={t(s.altKey, s.altFallback)}
                         width="800"
                         height="1000"
-                        loading="eager"
+                        loading="lazy"
                         decoding="async"
                       />
                     </div>

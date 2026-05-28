@@ -264,10 +264,10 @@ export default function App() {
       <Navbar />
       <Routes>
         <Route path="/"         element={<HeroPage />} />
-        <Route path="/reserve"  element={<ReservePage />} />
+{/*         <Route path="/reserve"  element={<ReservePage />} />
         <Route path="/auth"     element={<AuthPage />} />
         <Route path="/bookings" element={<MyBookingsPage />} />
-        <Route path="/admin"    element={<AdminPage />} />
+        <Route path="/admin"    element={<AdminPage />} /> */}
       </Routes>
     </>
   )

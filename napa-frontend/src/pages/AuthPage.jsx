@@ -6,7 +6,6 @@ import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { login, register } from '../lib/api'
 import { useAuth } from '../lib/AuthContext'
-import { NapaLogoMark } from '../components/Navbar'
 
 export default function AuthPage() {
   const { t } = useTranslation()
@@ -57,7 +56,6 @@ export default function AuthPage() {
       >
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
-            <NapaLogoMark size={60} />
           </div>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', color: 'var(--blush)', marginBottom: '0.25rem' }}>
             {mode === 'login' ? t('auth.login') : t('auth.register')}
