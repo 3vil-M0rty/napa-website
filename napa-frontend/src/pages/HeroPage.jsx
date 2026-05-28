@@ -57,7 +57,8 @@ const STRUCTURED_DATA = {
 
 function HDRBackground() {
   const { scene, gl } = useThree()
-  const tex = useTexture('/images/a1.webp')
+  const isMobile = window.innerWidth < 768
+  const tex = useTexture(isMobile ? '/images/a0.webp' : '/images/a1.webp')
 
   useEffect(() => {
     if (!tex) return
@@ -66,24 +67,23 @@ function HDRBackground() {
     scene.background = tex
 
     const envTex = tex.clone()
-    envTex.mapping = THREE.EquirectangularReflectionMapping
+    envTex.mapping    = THREE.EquirectangularReflectionMapping
     envTex.colorSpace = THREE.SRGBColorSpace
     envTex.needsUpdate = true
-    const pmrem = new THREE.PMREMGenerator(gl)
+    const pmrem  = new THREE.PMREMGenerator(gl)
     pmrem.compileEquirectangularShader()
     scene.environment = pmrem.fromEquirectangular(envTex).texture
     pmrem.dispose()
     envTex.dispose()
 
     return () => {
-      scene.background = null
+      scene.background  = null
       scene.environment = null
     }
   }, [tex, scene, gl])
 
   return null
 }
-
 function BottleModel({ scrollProgress }) {
   const model = useGLTF('/models/bottle.glb')
   const group = useRef()
