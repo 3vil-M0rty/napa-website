@@ -67,17 +67,17 @@ function HDRBackground() {
     scene.background = tex
 
     const envTex = tex.clone()
-    envTex.mapping    = THREE.EquirectangularReflectionMapping
+    envTex.mapping = THREE.EquirectangularReflectionMapping
     envTex.colorSpace = THREE.SRGBColorSpace
     envTex.needsUpdate = true
-    const pmrem  = new THREE.PMREMGenerator(gl)
+    const pmrem = new THREE.PMREMGenerator(gl)
     pmrem.compileEquirectangularShader()
     scene.environment = pmrem.fromEquirectangular(envTex).texture
     pmrem.dispose()
     envTex.dispose()
 
     return () => {
-      scene.background  = null
+      scene.background = null
       scene.environment = null
     }
   }, [tex, scene, gl])
@@ -114,7 +114,7 @@ function BottleModel({ scrollProgress }) {
       const vh = window.innerHeight
       // Only track scroll within the first viewport height
       // After that, clamp to 1 so the zoom holds its final state
-      const raw = window.scrollY / (vh * 1.2)
+      const raw = window.scrollY / (vh * 1)
       scrollProgress.current = Math.min(Math.max(raw, 0), 1)
       isVisible.current = window.scrollY < vh * 0.9
     }
@@ -126,35 +126,37 @@ function BottleModel({ scrollProgress }) {
   // Replace the useFrame inside BottleModel in HeroPage.jsx
   // Touch: float animation + scroll zoom restored, still no rotation
 
+  // Replace the entire useFrame inside BottleModel in HeroPage.jsx
+
   useFrame((state) => {
     if (!group.current) return
     const elapsed = state.clock.elapsedTime
     const sp = scrollProgress.current
 
     if (isTouch.current) {
-      // More pronounced float
-      const floatY = Math.sin(elapsed * 0.65) * 0.38          // bigger, slower bob
-      const swayX = Math.sin(elapsed * 0.42 + 1.2) * 0.09   // wider side drift
-
-      // Gentle oscillating Y rotation — left/right sway
-      const rotY = Math.sin(elapsed * 0.52) * 0.12          // ~7° each side
-      const rotZ = Math.sin(elapsed * 0.33 + 0.8) * 0.03   // tiny tilt for life
+      const floatY = Math.sin(elapsed * 0.65) * 0.38
+      const swayX = Math.sin(elapsed * 0.42 + 1.2) * 0.09
+      const rotY = Math.sin(elapsed * 0.52) * 0.12
+      const rotZ = Math.sin(elapsed * 0.33 + 0.8) * 0.03
 
       group.current.position.x += (swayX - group.current.position.x) * 0.05
       group.current.position.y = -0.5 + floatY + sp * 0.6
-      group.current.position.z += (-Math.sin(elapsed * 0.5) * 0.04 - group.current.position.z) * 0.03
+
+      // Single z assignment — no double accumulation
+      const targetZ = sp * 5
+      group.current.position.z += (targetZ - group.current.position.z) * 0.12  // faster lerp = snappier scroll up
 
       group.current.rotation.x = 0
       group.current.rotation.y += (rotY - group.current.rotation.y) * 0.06
       group.current.rotation.z += (rotZ - group.current.rotation.z) * 0.06
 
-      // Scroll zoom
-      const targetZ = sp * 5
-      group.current.position.z += (targetZ - group.current.position.z) * 0.06
-      const targetScale = 1 + sp * 8
-      group.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.06)
+      const targetScale = 1 + sp * 3
+      group.current.scale.lerp(
+        new THREE.Vector3(targetScale, targetScale, targetScale),
+        0.12  // faster lerp = snappier scroll up
+      )
+
     } else {
-      // Desktop — full original behaviour
       const bobAmp = 0.09 * (1 - sp * 0.8)
       const baseY = -0.5 + Math.sin(elapsed * 0.9) * bobAmp
       group.current.position.y = baseY + sp * 0.6
@@ -176,9 +178,13 @@ function BottleModel({ scrollProgress }) {
       }
 
       const targetZ = sp * 5
-      group.current.position.z += (targetZ - group.current.position.z) * 0.06
+      group.current.position.z += (targetZ - group.current.position.z) * 0.12
+
       const targetScale = 1 + sp * 8
-      group.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.06)
+      group.current.scale.lerp(
+        new THREE.Vector3(targetScale, targetScale, targetScale),
+        0.12
+      )
     }
   })
   return (
