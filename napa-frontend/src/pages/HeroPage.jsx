@@ -111,9 +111,12 @@ function BottleModel({ scrollProgress }) {
 
   useEffect(() => {
     const handleScroll = () => {
-      const maxScroll = document.documentElement.scrollHeight - window.innerHeight
-      scrollProgress.current = Math.min(Math.max(window.scrollY / maxScroll, 0), 1)
-      isVisible.current = window.scrollY < window.innerHeight * 0.9
+      const vh = window.innerHeight
+      // Only track scroll within the first viewport height
+      // After that, clamp to 1 so the zoom holds its final state
+      const raw = window.scrollY / (vh * 1.5)
+      scrollProgress.current = Math.min(Math.max(raw, 0), 1)
+      isVisible.current = window.scrollY < vh * 0.9
     }
     handleScroll()
     window.addEventListener('scroll', handleScroll, { passive: true })
