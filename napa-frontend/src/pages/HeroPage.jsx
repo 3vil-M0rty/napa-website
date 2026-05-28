@@ -121,13 +121,14 @@ function BottleModel({ scrollProgress }) {
   }, [model])
 
   useEffect(() => {
+    // On touch devices the scroll listener is only needed for desktop zoom.
+    // Skip it entirely — no scroll state needed on mobile.
+    if (isTouch.current) return
+
     const handleScroll = () => {
       const vh = window.innerHeight
       const raw = window.scrollY / vh
       scrollProgress.current = Math.min(Math.max(raw, 0), 1)
-      // FIX BUG 1: once past the hero section, mark as not visible so
-      // useFrame exits early and stops all animation (no further GPU work
-      // that could interfere with touch handling below).
       isVisible.current = window.scrollY < vh
     }
     handleScroll()
@@ -138,43 +139,27 @@ function BottleModel({ scrollProgress }) {
   useFrame((state) => {
     if (!group.current) return
 
-    // FIX BUG 2: when fully scrolled through the hero, snap to final state
-    // immediately — no lerp, no overshoot. The zoom must complete within 100vh.
-    if (scrollProgress.current >= 1) {
-      const finalScale = 1 + (isTouch.current ? 3 : 8)
-      group.current.scale.set(finalScale, finalScale, finalScale)
-      group.current.position.z = 5
-      return
-    }
-
     const elapsed = state.clock.elapsedTime
-    const sp = scrollProgress.current
 
     if (isTouch.current) {
+      // Touch: static position, gentle idle float only — zero scroll interaction,
+      // zero zoom, zero position.z change. Nothing that could fight native scroll.
       const floatY = Math.sin(elapsed * 0.65) * 0.38
       const swayX = Math.sin(elapsed * 0.42 + 1.2) * 0.09
       const rotY = Math.sin(elapsed * 0.52) * 0.12
       const rotZ = Math.sin(elapsed * 0.33 + 0.8) * 0.03
 
       group.current.position.x += (swayX - group.current.position.x) * 0.05
-      group.current.position.y = -0.5 + floatY + sp * 0.6
-
-      // FIX BUG 2: clamp position.z so it cannot exceed the final value.
-      // Lerp toward target but never past it.
-      const targetZ = sp * 5
-      const newZ = group.current.position.z + (targetZ - group.current.position.z) * 0.12
-      group.current.position.z = Math.min(newZ, 5)
+      group.current.position.y = -0.5 + floatY
+      group.current.position.z = 0   // never moves toward camera
+      group.current.scale.set(1, 1, 1) // never zooms
 
       group.current.rotation.x = 0
       group.current.rotation.y += (rotY - group.current.rotation.y) * 0.06
       group.current.rotation.z += (rotZ - group.current.rotation.z) * 0.06
 
-      // FIX BUG 2: clamp scale so it cannot exceed the final value.
-      const targetScale = 1 + sp * 3
-      const clampedScale = Math.min(targetScale, 4) // 1 + 1*3 = 4 max
-      group.current.scale.lerp(new THREE.Vector3(clampedScale, clampedScale, clampedScale), 0.12)
-
     } else {
+      const sp = scrollProgress.current
       const bobAmp = 0.09 * (1 - sp * 0.8)
       const baseY = -0.5 + Math.sin(elapsed * 0.9) * bobAmp
       group.current.position.y = baseY + sp * 0.6
