@@ -5,11 +5,11 @@ import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
 import ScrollSection from '../components/ScrollSection'
 import MobileStack from '../components/MobileStack'
-import * as THREE from 'three'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { useGLTF, useTexture } from '@react-three/drei'
-
 import ImageGallery from '../components/ImageGallery'
+
+// Three.js / R3F imports are deferred — only loaded on non-touch devices
+// to keep the mobile bundle lean and avoid any canvas scroll interference.
+let Canvas, useFrame, useThree, useGLTF, useTexture, THREE
 
 const STRUCTURED_DATA = {
   '@context': 'https://schema.org',
@@ -41,10 +41,36 @@ const STRUCTURED_DATA = {
   ],
 }
 
+// ─── Detect touch/mobile once at module level ────────────────────────────────
+// This runs synchronously before any render, so we never mount the Canvas tree
+// on touch devices at all — no lazy unmounting, no flicker.
+const IS_TOUCH =
+  typeof window !== 'undefined' &&
+  ('ontouchstart' in window || navigator.maxTouchPoints > 0)
+
+// ─── 3-D components (desktop only) ──────────────────────────────────────────
+// These are defined as plain functions but only ever rendered inside a branch
+// that is already gated on !IS_TOUCH, so the Three.js imports at the top of
+// this file are the only ones that need to be conditionally loaded.
+// We handle that with a top-level dynamic import in the module body.
+let _threeReady = false
+async function _loadThree() {
+  if (_threeReady) return
+  ;[{ Canvas, useFrame, useThree }, { useGLTF, useTexture }, THREE] =
+    await Promise.all([
+      import('@react-three/fiber'),
+      import('@react-three/drei'),
+      import('three'),
+    ])
+  _threeReady = true
+}
+
+// Pre-load on desktop immediately (non-blocking)
+if (!IS_TOUCH) _loadThree()
+
 function HDRBackground() {
   const { scene, gl } = useThree()
-  const isMobile = window.innerWidth < 768
-  const tex = useTexture(isMobile ? '/images/a0.webp' : '/images/a1.webp')
+  const tex = useTexture('/images/a1.webp')
 
   useEffect(() => {
     if (!tex) return
@@ -75,7 +101,6 @@ function BottleModel({ scrollProgress }) {
   const frozenRotY = useRef(0)
   const frozenRotX = useRef(0)
   const labelRotY = useRef(0)
-  const isTouch = useRef('ontouchstart' in window || navigator.maxTouchPoints > 0)
 
   useEffect(() => {
     let labelOffset = 0
@@ -94,10 +119,6 @@ function BottleModel({ scrollProgress }) {
   }, [model])
 
   useEffect(() => {
-    // On touch devices the scroll listener is only needed for desktop zoom.
-    // Skip it entirely — no scroll state needed on mobile.
-    if (isTouch.current) return
-
     const handleScroll = () => {
       const vh = window.innerHeight
       const raw = window.scrollY / vh
@@ -113,56 +134,34 @@ function BottleModel({ scrollProgress }) {
     if (!group.current) return
 
     const elapsed = state.clock.elapsedTime
+    const sp = scrollProgress.current
+    const bobAmp = 0.09 * (1 - sp * 0.8)
+    const baseY = -0.5 + Math.sin(elapsed * 0.9) * bobAmp
+    group.current.position.y = baseY + sp * 0.6
 
-    if (isTouch.current) {
-      // Touch: static position, gentle idle float only — zero scroll interaction,
-      // zero zoom, zero position.z change. Nothing that could fight native scroll.
-      const floatY = Math.sin(elapsed * 0.65) * 0.38
-      const swayX = Math.sin(elapsed * 0.42 + 1.2) * 0.09
-      const rotY = Math.sin(elapsed * 0.52) * 0.12
-      const rotZ = Math.sin(elapsed * 0.33 + 0.8) * 0.03
-
-      group.current.position.x += (swayX - group.current.position.x) * 0.05
-      group.current.position.y = -0.5 + floatY
-      group.current.position.z = 0   // never moves toward camera
-      group.current.scale.set(1, 1, 1) // never zooms
-
-      group.current.rotation.x = 0
-      group.current.rotation.y += (rotY - group.current.rotation.y) * 0.06
-      group.current.rotation.z += (rotZ - group.current.rotation.z) * 0.06
-
-    } else {
-      const sp = scrollProgress.current
-      const bobAmp = 0.09 * (1 - sp * 0.8)
-      const baseY = -0.5 + Math.sin(elapsed * 0.9) * bobAmp
-      group.current.position.y = baseY + sp * 0.6
-
-      if (sp < 0.5) {
-        if (isVisible.current) {
-          const targetY = state.mouse.x * Math.PI * 0.18
-          const targetX = -state.mouse.y * Math.PI * 0.08
-          group.current.rotation.y += (targetY - group.current.rotation.y) * 0.05
-          group.current.rotation.x += (targetX - group.current.rotation.x) * 0.05
-          frozenRotY.current = group.current.rotation.y
-          frozenRotX.current = group.current.rotation.x
-        }
-      } else {
-        const t2 = (sp - 0.5) / 0.5
-        const ease = t2 * t2 * (3 - 2 * t2)
-        group.current.rotation.y = frozenRotY.current + (labelRotY.current - frozenRotY.current) * ease
-        group.current.rotation.x = frozenRotX.current * (1 - ease)
+    if (sp < 0.5) {
+      if (isVisible.current) {
+        const targetY = state.mouse.x * Math.PI * 0.18
+        const targetX = -state.mouse.y * Math.PI * 0.08
+        group.current.rotation.y += (targetY - group.current.rotation.y) * 0.05
+        group.current.rotation.x += (targetX - group.current.rotation.x) * 0.05
+        frozenRotY.current = group.current.rotation.y
+        frozenRotX.current = group.current.rotation.x
       }
-
-      // FIX BUG 2: clamp position.z
-      const targetZ = sp * 5
-      const newZ = group.current.position.z + (targetZ - group.current.position.z) * 0.12
-      group.current.position.z = Math.min(newZ, 5)
-
-      // FIX BUG 2: clamp scale
-      const targetScale = 1 + sp * 8
-      const clampedScale = Math.min(targetScale, 9) // 1 + 1*8 = 9 max
-      group.current.scale.lerp(new THREE.Vector3(clampedScale, clampedScale, clampedScale), 0.12)
+    } else {
+      const t2 = (sp - 0.5) / 0.5
+      const ease = t2 * t2 * (3 - 2 * t2)
+      group.current.rotation.y = frozenRotY.current + (labelRotY.current - frozenRotY.current) * ease
+      group.current.rotation.x = frozenRotX.current * (1 - ease)
     }
+
+    const targetZ = sp * 5
+    const newZ = group.current.position.z + (targetZ - group.current.position.z) * 0.12
+    group.current.position.z = Math.min(newZ, 5)
+
+    const targetScale = 1 + sp * 8
+    const clampedScale = Math.min(targetScale, 9)
+    group.current.scale.lerp(new THREE.Vector3(clampedScale, clampedScale, clampedScale), 0.12)
   })
 
   return (
@@ -203,6 +202,66 @@ function ResponsiveCamera() {
   return null
 }
 
+// ─── Desktop 3-D hero background ────────────────────────────────────────────
+function DesktopCanvasHero({ scrollProgress }) {
+  const [ready, setReady] = useState(_threeReady)
+
+  useEffect(() => {
+    if (_threeReady) return
+    _loadThree().then(() => setReady(true))
+  }, [])
+
+  if (!ready || !Canvas) return null
+
+  return (
+    <Canvas
+      shadows
+      camera={{ position: [0, 1.5, 20], fov: 50 }}
+      gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.1 }}
+      dpr={[1, Math.min(window.devicePixelRatio, 2)]}
+      style={{ position: 'absolute', inset: 0, zIndex: 1 }}
+      aria-hidden="true"
+    >
+      <Suspense fallback={null}>
+        <HDRBackground />
+        <ResponsiveCamera />
+        <ambientLight intensity={0.3} color="#ffccd5" />
+        <directionalLight
+          position={[3, 14, 8]} intensity={3.5} color="#fff5e0" castShadow
+          shadow-mapSize-width={2048} shadow-mapSize-height={2048}
+          shadow-camera-near={0.5} shadow-camera-far={40}
+          shadow-camera-left={-8} shadow-camera-right={8}
+          shadow-camera-top={8} shadow-camera-bottom={-8}
+          shadow-bias={-0.0004} shadow-radius={6}
+        />
+        <directionalLight position={[5, 2, 4]} intensity={0.8} color="#ffb870" castShadow={false} />
+        <directionalLight position={[-5, 6, -8]} intensity={1.4} color="#7baeff" castShadow={false} />
+        <CursorLight />
+        <BottleModel scrollProgress={scrollProgress} />
+      </Suspense>
+    </Canvas>
+  )
+}
+
+// ─── Mobile static background (no Three.js at all) ──────────────────────────
+function MobileStaticBackground() {
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        position: 'absolute',
+        inset: 0,
+        zIndex: 1,
+        backgroundImage: 'url(/images/a0.webp)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    />
+  )
+}
+
+// ─── Shared overlays ─────────────────────────────────────────────────────────
 function FilmGrain() {
   return (
     <div aria-hidden="true" style={{
@@ -231,9 +290,7 @@ function HeroOverlay() {
   const creamy60 = 'rgba(250,246,239,0.6)'
   const creamy45 = 'rgba(250,246,239,0.45)'
 
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' ? window.innerWidth < 640 : false
-  )
+  const [isMobile, setIsMobile] = useState(IS_TOUCH || (typeof window !== 'undefined' && window.innerWidth < 640))
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 640)
     window.addEventListener('resize', check)
@@ -245,7 +302,7 @@ function HeroOverlay() {
       <motion.div
         initial={{ opacity: 0, x: 24 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 2.8, duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ delay: IS_TOUCH ? 0.6 : 2.8, duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
         style={{
           position: 'absolute', top: '50%', transform: 'translateY(-50%)',
           right: isMobile ? '1rem' : '3vw',
@@ -301,7 +358,7 @@ function HeroOverlay() {
 
       <motion.address
         initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-        transition={{ delay: 3.2, duration: 1.2 }}
+        transition={{ delay: IS_TOUCH ? 0.8 : 3.2, duration: 1.2 }}
         style={{
           position: 'absolute',
           bottom: isMobile ? '1.5rem' : '2.5rem',
@@ -359,38 +416,11 @@ function HeroOverlay() {
   )
 }
 
+// ─── Page ────────────────────────────────────────────────────────────────────
 export default function HeroPage() {
   const scrollProgress = useRef(0)
-  const canvasRef = useRef(null)
   const { t, i18n } = useTranslation()
   const lang = i18n.language === 'fr' ? 'fr' : 'en'
-  const isTouch = useRef('ontouchstart' in window || navigator.maxTouchPoints > 0)
-
-  // FIX BUG 1: On touch devices, toggle pointer-events on the canvas based on
-  // whether the user is inside the hero section (scrollY < innerHeight) or not.
-  // When below the hero (in MobileStack), the canvas is position:absolute and
-  // still occupies its position in the stacking context — its touch listeners
-  // would intercept upward scroll events. Setting pointer-events:none removes
-  // it from the touch hit-test entirely, letting native scroll run freely.
-  useEffect(() => {
-    if (!isTouch.current) return
-
-    const handleScroll = () => {
-      const canvas = canvasRef.current
-      if (!canvas) return
-      if (window.scrollY >= window.innerHeight) {
-        // Past hero: remove canvas from touch event path completely
-        canvas.style.pointerEvents = 'none'
-      } else {
-        // Inside hero: restore normal behavior
-        canvas.style.pointerEvents = 'auto'
-      }
-    }
-
-    handleScroll()
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
 
   return (
     <>
@@ -436,47 +466,15 @@ export default function HeroPage() {
             touchAction: 'pan-y',
           }}
         >
-          <Canvas
-            ref={canvasRef}
-            shadows
-            camera={{ position: [0, 1.5, 20], fov: 50 }}
-            gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.1 }}
-            dpr={[1, Math.min(window.devicePixelRatio, 2)]}
-            style={{
-              position: 'absolute',
-              inset: 0,
-              zIndex: 1,
-              touchAction: 'pan-y',
-              // Initial pointer-events value; toggled by scroll handler above on touch devices.
-              // On desktop this stays 'auto' (mouse events work normally).
-              pointerEvents: 'auto',
-            }}
-            aria-hidden="true"
-            eventSource={isTouch.current ? null : undefined}
-            events={isTouch.current ? () => ({}) : undefined}
-          >
-            <Suspense fallback={null}>
-              <HDRBackground />
-              <ResponsiveCamera />
-              <ambientLight intensity={0.3} color="#ffccd5" />
-              <directionalLight
-                position={[3, 14, 8]} intensity={3.5} color="#fff5e0" castShadow
-                shadow-mapSize-width={2048} shadow-mapSize-height={2048}
-                shadow-camera-near={0.5} shadow-camera-far={40}
-                shadow-camera-left={-8} shadow-camera-right={8}
-                shadow-camera-top={8} shadow-camera-bottom={-8}
-                shadow-bias={-0.0004} shadow-radius={6}
-              />
-              <directionalLight position={[5, 2, 4]} intensity={0.8} color="#ffb870" castShadow={false} />
-              <directionalLight position={[-5, 6, -8]} intensity={1.4} color="#7baeff" castShadow={false} />
-              <CursorLight />
-              <BottleModel scrollProgress={scrollProgress} />
-            </Suspense>
-          </Canvas>
+          {IS_TOUCH
+            ? <MobileStaticBackground />
+            : <DesktopCanvasHero scrollProgress={scrollProgress} />
+          }
           <Vignette />
           <FilmGrain />
           <HeroOverlay />
         </section>
+
         <ImageGallery />
         <MobileStack />
         <ScrollSection />
