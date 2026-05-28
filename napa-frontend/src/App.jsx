@@ -52,7 +52,10 @@ function LoaderOverlay({ progress }) {
       const els = Array.from(
         svg.querySelectorAll('path, polyline, line, circle, ellipse, rect, polygon')
       )
-      if (!els.length) { rafRef.current = requestAnimationFrame(setup); return }
+      if (!els.length) {
+        rafRef.current = requestAnimationFrame(setup)
+        return
+      }
 
       els.forEach(el => {
         let len = 0
@@ -73,21 +76,24 @@ function LoaderOverlay({ progress }) {
         const elapsed = Date.now() - animStartRef.current
         const t       = Math.min(1, elapsed / DRAW_DURATION_MS)
         const eased   = t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2
+
         els.forEach(el => {
           let len = 0
           try { len = el.getTotalLength?.() ?? 400 } catch (_) { len = 400 }
           el.style.strokeDashoffset = `${len * (1 - eased)}`
         })
+
         if (t < 1) rafRef.current = requestAnimationFrame(draw)
       }
+
       rafRef.current = requestAnimationFrame(draw)
     }
 
     rafRef.current = requestAnimationFrame(setup)
-    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }
+    return () => rafRef.current && cancelAnimationFrame(rafRef.current)
   }, [])
 
-  const isMobile        = window.innerWidth < 768
+  const isMobile = window.innerWidth < 768
   const displayProgress = Math.round(Math.min(progress, 100))
 
   return (
@@ -96,10 +102,14 @@ function LoaderOverlay({ progress }) {
       initial={{ opacity: 1 }}
       exit={{ opacity: 0, transition: { duration: 1.0, ease: [0.76, 0, 0.24, 1] } }}
       style={{
-        position: 'fixed', inset: 0, zIndex: 9999,
+        position: 'fixed',
+        inset: 0,
+        zIndex: 9999,
         background: `linear-gradient(160deg, ${WINE_RED} 0%, ${ROSE} 45%, ${BLUSH} 100%)`,
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
         overflow: 'hidden',
       }}
     >
@@ -109,44 +119,61 @@ function LoaderOverlay({ progress }) {
         style={{
           position:  'absolute',
           bottom:    isMobile ? '-20px' : '-53px',
-          left:      isMobile ? '50%'   : '-30px',
+          left:      isMobile ? '50%' : '-30px',
           transform: isMobile ? 'translateX(-50%)' : 'none',
           width:     'min(500px, 90vw)',
           height:    'auto',
-          display:   'block',
           opacity:   0,
         }}
       />
 
       <div style={{
-        position: 'absolute', bottom: isMobile ? '3rem' : '2.5rem',
-        left: '50%', transform: 'translateX(-50%)',
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', gap: '10px', pointerEvents: 'none',
+        position: 'absolute',
+        bottom: isMobile ? '3rem' : '2.5rem',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '10px',
+        pointerEvents: 'none',
       }}>
         <span style={{
-          fontFamily: FONT_SANS, fontSize: '11px', fontWeight: 500,
-          letterSpacing: '3px', textTransform: 'uppercase',
-          color: '#8b1d1f', fontVariantNumeric: 'tabular-nums',
-          minWidth: '3ch', textAlign: 'center',
+          fontFamily: FONT_SANS,
+          fontSize: '11px',
+          letterSpacing: '3px',
+          textTransform: 'uppercase',
+          color: '#8b1d1f',
         }}>
           {displayProgress}%
         </span>
 
         <div style={{
-          width: 'min(200px, 55vw)', height: '1px',
-          background: 'rgba(139,29,31,0.25)', position: 'relative', overflow: 'hidden',
+          width: 'min(200px, 55vw)',
+          height: '1px',
+          background: 'rgba(139,29,31,0.25)',
+          position: 'relative',
         }}>
           <motion.div
-            style={{ position: 'absolute', top: 0, left: 0, bottom: 0, background: '#8b1d1f', originX: 0 }}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              bottom: 0,
+              background: '#8b1d1f',
+              originX: 0,
+            }}
             animate={{ width: `${displayProgress}%` }}
-            transition={{ duration: 0.4, ease: 'easeOut' }}
+            transition={{ duration: 0.4 }}
           />
         </div>
 
         <span style={{
-          fontFamily: FONT_SANS, fontSize: '9px', fontWeight: 400,
-          letterSpacing: '3px', textTransform: 'uppercase', color: '#8b1d1f',
+          fontFamily: FONT_SANS,
+          fontSize: '9px',
+          letterSpacing: '3px',
+          textTransform: 'uppercase',
+          color: '#8b1d1f',
         }}>
           Loading
         </span>
@@ -157,10 +184,16 @@ function LoaderOverlay({ progress }) {
 
 /* =========================================================
    GLOBAL LOADER CONTROLLER
-   Waits for: bottle.glb + slide images + MIN_DISPLAY_MS.
-   Does NOT wait for scene env texture — loads in background.
 ========================================================= */
 function GlobalLoader() {
+  const isTouchDevice =
+    typeof window !== 'undefined' &&
+    (window.matchMedia('(pointer: coarse)').matches ||
+     window.innerWidth < 768)
+
+  // 🚨 NO LOADER ON MOBILE/TABLET
+  if (isTouchDevice) return null
+
   const { progress, item }            = useProgress()
   const [imagesReady, setImagesReady] = useState(false)
   const [bottleReady, setBottleReady] = useState(false)
@@ -182,8 +215,10 @@ function GlobalLoader() {
 
   useEffect(() => {
     if (!bottleReady || !imagesReady) return
+
     const elapsed   = Date.now() - openedAt.current
     const remaining = Math.max(0, MIN_DISPLAY_MS - elapsed)
+
     const t = setTimeout(() => setVisible(false), remaining)
     return () => clearTimeout(t)
   }, [bottleReady, imagesReady])
@@ -193,24 +228,27 @@ function GlobalLoader() {
     return () => { document.body.style.overflow = '' }
   }, [visible])
 
-  const displayProgress = bottleReady ? 100 : Math.min(progress, 80)
-
   return (
     <AnimatePresence>
-      {visible && <LoaderOverlay progress={displayProgress} />}
+      {visible && <LoaderOverlay progress={Math.min(progress, 100)} />}
     </AnimatePresence>
   )
 }
 
 /* =========================================================
-   CRITICAL: paint gradient before JS
+   CRITICAL CSS
 ========================================================= */
 if (typeof document !== 'undefined') {
   const existing = document.getElementById('napa-loader-critical')
   if (!existing) {
     const style = document.createElement('style')
     style.id = 'napa-loader-critical'
-    style.textContent = `html,body{margin:0;padding:0;}body{background:linear-gradient(160deg,#8b1d1f 0%,#cc5355 45%,#ebb3b3 100%);}`
+    style.textContent = `
+      html,body{margin:0;padding:0;}
+      body{
+        background:linear-gradient(160deg,#8b1d1f 0%,#cc5355 45%,#ebb3b3 100%);
+      }
+    `
     document.head.appendChild(style)
   }
 }
