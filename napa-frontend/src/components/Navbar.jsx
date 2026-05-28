@@ -1,4 +1,9 @@
-// src/components/Navbar.jsx
+// src/components/Navbar.jsx — FIXED
+// Bug fixed: isMobile used to initialize as `false` (SSR-safe guess), then
+// useEffect corrected it after the first paint — causing a visible flash where
+// the desktop nav rendered for ~1 frame on mobile before switching to the burger.
+// Fix: initialize directly from window.innerWidth. This is a pure CSR app
+// (no SSR / no hydration), so reading window on module init is always safe.
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -11,6 +16,13 @@ const LANGUAGES = [
   { code: 'en', label: 'EN' },
   { code: 'fr', label: 'FR' },
 ]
+
+// ─── FIX helper: read breakpoint once, synchronously ───────────────────────
+// Called at useState init time so the very first render already knows the
+// correct value — no flash, no layout shift.
+function getIsMobile() {
+  return typeof window !== 'undefined' && window.innerWidth < 768
+}
 
 function Hairline() {
   return (
@@ -89,11 +101,12 @@ export default function Navbar() {
   const { user, logoutUser } = useAuth()
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
+
+  // ─── FIX: initialize synchronously so first render is already correct ───
+  const [isMobile, setIsMobile] = useState(getIsMobile)
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
-    check()
     window.addEventListener('resize', check)
     return () => window.removeEventListener('resize', check)
   }, [])
@@ -108,9 +121,9 @@ export default function Navbar() {
 
   const NAV_LINKS = [
     { to: '/estate',  label: t('nav.estate',       'Estate')       },
-    { to: '/cellar',  label: t('nav.cellar',       'Cellar')       },
-    { to: '/journal', label: t('nav.journal',      'Journal')      },
-    { to: '/reserve', label: t('nav.reservations', 'Reservations') },
+    { to: '/cellar',  label: t('nav.cellar',        'Cellar')       },
+    { to: '/journal', label: t('nav.journal',       'Journal')      },
+    { to: '/reserve', label: t('nav.reservations',  'Reservations') },
   ]
 
   const LangSwitch = ({ dark = false }) => (
@@ -274,7 +287,7 @@ export default function Navbar() {
         )}
       </motion.nav>
 
-      {/* MOBILE DRAWER — full height, all content centered */}
+      {/* MOBILE DRAWER */}
       <AnimatePresence>
         {isMobile && menuOpen && (
           <motion.div
@@ -296,7 +309,6 @@ export default function Navbar() {
               overflowY: 'auto',
             }}
           >
-            {/* Nav links — centered, full width up to a max */}
             <div style={{ width: '100%', maxWidth: '320px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               {NAV_LINKS.map(({ to, label }) => (
                 <MobileNavLink key={to} to={to} active={location.pathname === to}
@@ -317,7 +329,6 @@ export default function Navbar() {
                 </MobileNavLink>
               )}
 
-              {/* Lang + Login — centered below links */}
               <div style={{
                 marginTop: '2rem',
                 display: 'flex', flexDirection: 'column',

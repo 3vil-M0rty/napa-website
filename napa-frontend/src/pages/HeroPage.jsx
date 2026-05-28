@@ -1,4 +1,27 @@
-// src/pages/HeroPage.jsx
+// src/pages/HeroPage.jsx — FIXED
+//
+// BUG: On real mobile (iOS Safari / Android Chrome), scrolling UP through
+// MobileStack back to slide 1 causes a "scroll trap" — the thumb stops moving
+// for a full viewport height before the hero/landing page appears.
+//
+// ROOT CAUSE: React Three Fiber registers touchstart/touchmove listeners
+// directly on the <canvas> DOM element for its internal pointer event system.
+// These listeners call e.preventDefault() or are registered as non-passive,
+// which tells the browser "I'm handling this touch — don't scroll."
+// The `eventSource={null}` and `events={() => ({})}` props in the JSX only
+// disable R3F's *synthetic* event routing; they do NOT remove the native touch
+// listeners R3F attaches to the canvas element itself.
+// Desktop DevTools "phone" mode uses mouse/pointer events, not real touch
+// events — so the bug never appears there.
+//
+// FIX (two parts):
+// 1. Set `touch-action: pan-y` on the canvas via a style prop. This tells the
+//    browser to always handle vertical scrolling natively on this element,
+//    regardless of any JS touch listeners attached to it.
+// 2. Set `touch-action: pan-y` on the hero <section> wrapper for the same reason.
+//
+// That's it. No R3F internals changed, no logic changed.
+
 import { useEffect, useRef, useState, Suspense } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
@@ -95,7 +118,6 @@ function BottleModel({ scrollProgress }) {
   useEffect(() => {
     const handleScroll = () => {
       const vh = window.innerHeight
-      // Progress completes over 100vh (one full viewport scroll)
       const raw = window.scrollY / vh
       scrollProgress.current = Math.min(Math.max(raw, 0), 1)
       isVisible.current = window.scrollY < vh
@@ -108,12 +130,10 @@ function BottleModel({ scrollProgress }) {
   useFrame((state) => {
     if (!group.current) return
 
-    // When fully scrolled past the hero, snap everything to rest and stop
-    // This means no wasted animation while user scrolls through MobileStack
     if (scrollProgress.current >= 1) {
       group.current.scale.set(1 + (isTouch.current ? 3 : 8), 1 + (isTouch.current ? 3 : 8), 1 + (isTouch.current ? 3 : 8))
       group.current.position.z = isTouch.current ? 5 : 5
-      return  // ← exit early, zero GPU work
+      return
     }
 
     const elapsed = state.clock.elapsedTime
@@ -401,16 +421,37 @@ export default function HeroPage() {
       </Helmet>
 
       <main id="main-content">
+        {/*
+          ─── FIX: touch-action: pan-y on the hero section ─────────────────
+          On real mobile browsers, any element that has touch event listeners
+          (or contains a WebGL canvas) can block scroll. Adding touch-action: pan-y
+          tells the browser: "always handle vertical scroll natively here,
+          even if JS has touchmove listeners on this element."
+          This also unblocks the upward scroll past this section.
+        */}
         <section
           aria-label={t('hero.sectionAriaLabel')}
-          style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}
+          style={{
+            width: '100vw',
+            height: '100vh',
+            position: 'relative',
+            overflow: 'hidden',
+            touchAction: 'pan-y',   // ← FIX
+          }}
         >
           <Canvas
             shadows
             camera={{ position: [0, 1.5, 20], fov: 50 }}
             gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.1 }}
             dpr={[1, Math.min(window.devicePixelRatio, 2)]}
-            style={{ position: 'absolute', inset: 0, zIndex: 1 }}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              zIndex: 1,
+              touchAction: 'pan-y',  // ← FIX: canvas itself must also declare pan-y
+                                     // R3F attaches native touch listeners to the canvas
+                                     // element; this overrides them for scroll purposes.
+            }}
             aria-hidden="true"
             eventSource={isTouch.current ? null : undefined}
             events={isTouch.current ? () => ({}) : undefined}
