@@ -65,16 +65,18 @@ function EditorialNavLink({ to, children, active }) {
 
 function MobileNavLink({ to, children, active, onClick }) {
   return (
-    <Link to={to} onClick={onClick} style={{ textDecoration: 'none' }}>
+    <Link to={to} onClick={onClick} style={{ textDecoration: 'none', width: '100%' }}>
       <span style={{
         display: 'block',
         fontFamily: "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif",
         fontSize: '11px', fontWeight: 500, letterSpacing: '3px',
         textTransform: 'uppercase',
         color: active ? '#8b1d1f' : '#1a1614',
-        padding: '14px 0',
+        padding: '18px 0',
+        width: '100%',
         borderBottom: '1px solid rgba(26,22,20,0.08)',
         cursor: 'pointer',
+        textAlign: 'center',
       }}>
         {children}
       </span>
@@ -105,13 +107,13 @@ export default function Navbar() {
   }
 
   const NAV_LINKS = [
-    { to: '/estate',  label: t('nav.estate',        'Estate')        },
-    { to: '/cellar',  label: t('nav.cellar',        'Cellar')        },
-    { to: '/journal', label: t('nav.journal',       'Journal')       },
-    { to: '/reserve', label: t('nav.reservations',  'Reservations')  },
+    { to: '/estate',  label: t('nav.estate',       'Estate')       },
+    { to: '/cellar',  label: t('nav.cellar',       'Cellar')       },
+    { to: '/journal', label: t('nav.journal',      'Journal')      },
+    { to: '/reserve', label: t('nav.reservations', 'Reservations') },
   ]
 
-  const LangSwitch = () => (
+  const LangSwitch = ({ dark = false }) => (
     <div role="group" aria-label={t('nav.languageSelection')}
       style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
       {LANGUAGES.map((lang) => (
@@ -122,11 +124,17 @@ export default function Navbar() {
             background: 'none', border: 'none', padding: 0, cursor: 'pointer',
             fontFamily: "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif",
             fontSize: '10px', fontWeight: 500, letterSpacing: '3px',
-            textTransform: 'uppercase', color: 'white',
-            mixBlendMode: 'difference', WebkitMixBlendMode: 'difference',
-            borderBottom: i18n.language === lang.code ? '1px solid white' : '1px solid transparent',
+            textTransform: 'uppercase',
+            color: dark
+              ? (i18n.language === lang.code ? '#8b1d1f' : '#4a4340')
+              : 'white',
+            mixBlendMode: dark ? 'normal' : 'difference',
+            WebkitMixBlendMode: dark ? 'normal' : 'difference',
+            borderBottom: i18n.language === lang.code
+              ? `1px solid ${dark ? '#8b1d1f' : 'white'}`
+              : '1px solid transparent',
             paddingBottom: '2px',
-            opacity: i18n.language === lang.code ? 1 : 0.55,
+            opacity: dark ? 1 : (i18n.language === lang.code ? 1 : 0.55),
             transition: 'opacity 0.2s ease',
           }}>
           {lang.label}
@@ -135,12 +143,14 @@ export default function Navbar() {
     </div>
   )
 
-  const LoginBtn = () => user ? (
+  const LoginBtn = ({ dark = false }) => user ? (
     <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
       <span style={{
         fontFamily: "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif",
         fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase',
-        color: 'white', mixBlendMode: 'difference', WebkitMixBlendMode: 'difference',
+        color: dark ? '#1a1614' : 'white',
+        mixBlendMode: dark ? 'normal' : 'difference',
+        WebkitMixBlendMode: dark ? 'normal' : 'difference',
       }}>
         {user.name}
       </span>
@@ -226,7 +236,7 @@ export default function Navbar() {
           </div>
         )}
 
-        {/* MOBILE HAMBURGER — wine-red X when open, white lines when closed */}
+        {/* MOBILE HAMBURGER */}
         {isMobile && (
           <button
             onClick={() => setMenuOpen(v => !v)}
@@ -237,8 +247,6 @@ export default function Navbar() {
               padding: '4px', zIndex: 101,
               display: 'flex', flexDirection: 'column',
               gap: '5px', alignItems: 'center', pointerEvents: 'auto',
-              // Only use difference blend when closed (white lines over any bg)
-              // When open, use solid wine-red — no blend needed over the light drawer
               mixBlendMode: menuOpen ? 'normal' : 'difference',
               WebkitMixBlendMode: menuOpen ? 'normal' : 'difference',
             }}
@@ -256,7 +264,6 @@ export default function Navbar() {
                 transition={{ duration: 0.28 }}
                 style={{
                   display: 'block', width: '22px', height: '1px',
-                  // Wine red when forming the X, white when hamburger
                   background: menuOpen ? '#8b1d1f' : 'white',
                   transformOrigin: 'center',
                   transition: 'background 0.2s ease',
@@ -267,7 +274,7 @@ export default function Navbar() {
         )}
       </motion.nav>
 
-      {/* MOBILE DRAWER — full height */}
+      {/* MOBILE DRAWER — full height, all content centered */}
       <AnimatePresence>
         {isMobile && menuOpen && (
           <motion.div
@@ -277,49 +284,49 @@ export default function Navbar() {
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             style={{
               position: 'fixed',
-              top: 0, left: 0, right: 0, bottom: 0,  // full height
+              top: 0, left: 0, right: 0, bottom: 0,
               zIndex: 99,
               background: 'rgba(250, 246, 239, 0.97)',
               backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-              padding: '5rem 1.5rem 2.5rem',
-              display: 'flex', flexDirection: 'column',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '5rem 2rem 3rem',
               overflowY: 'auto',
             }}
           >
-            {NAV_LINKS.map(({ to, label }) => (
-              <MobileNavLink key={to} to={to} active={location.pathname === to}
-                onClick={() => setMenuOpen(false)}>
-                {label}
-              </MobileNavLink>
-            ))}
-            {user?.role === 'admin' && (
-              <MobileNavLink to="/admin" active={location.pathname === '/admin'}
-                onClick={() => setMenuOpen(false)}>
-                {t('nav.admin')}
-              </MobileNavLink>
-            )}
-            {user && (
-              <MobileNavLink to="/my-bookings" active={location.pathname === '/my-bookings'}
-                onClick={() => setMenuOpen(false)}>
-                {t('nav.myBookings')}
-              </MobileNavLink>
-            )}
-            <div style={{ marginTop: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', gap: '14px' }}>
-                {LANGUAGES.map(lang => (
-                  <button key={lang.code} onClick={() => changeLanguage(lang.code)}
-                    style={{
-                      background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-                      fontFamily: "'Inter', sans-serif", fontSize: '10px', fontWeight: 500,
-                      letterSpacing: '3px', textTransform: 'uppercase',
-                      color: i18n.language === lang.code ? '#8b1d1f' : '#4a4340',
-                      borderBottom: i18n.language === lang.code ? '1px solid #8b1d1f' : '1px solid transparent',
-                      paddingBottom: '2px',
-                    }}
-                  >{lang.label}</button>
-                ))}
+            {/* Nav links — centered, full width up to a max */}
+            <div style={{ width: '100%', maxWidth: '320px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              {NAV_LINKS.map(({ to, label }) => (
+                <MobileNavLink key={to} to={to} active={location.pathname === to}
+                  onClick={() => setMenuOpen(false)}>
+                  {label}
+                </MobileNavLink>
+              ))}
+              {user?.role === 'admin' && (
+                <MobileNavLink to="/admin" active={location.pathname === '/admin'}
+                  onClick={() => setMenuOpen(false)}>
+                  {t('nav.admin')}
+                </MobileNavLink>
+              )}
+              {user && (
+                <MobileNavLink to="/my-bookings" active={location.pathname === '/my-bookings'}
+                  onClick={() => setMenuOpen(false)}>
+                  {t('nav.myBookings')}
+                </MobileNavLink>
+              )}
+
+              {/* Lang + Login — centered below links */}
+              <div style={{
+                marginTop: '2rem',
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'center', gap: '1.5rem',
+                width: '100%',
+              }}>
+                <LangSwitch dark />
+                <LoginBtn dark />
               </div>
-              <LoginBtn />
             </div>
           </motion.div>
         )}

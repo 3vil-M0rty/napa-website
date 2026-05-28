@@ -114,7 +114,7 @@ function BottleModel({ scrollProgress }) {
       const vh = window.innerHeight
       // Only track scroll within the first viewport height
       // After that, clamp to 1 so the zoom holds its final state
-      const raw = window.scrollY / (vh * 1.5)
+      const raw = window.scrollY / (vh * 1.2)
       scrollProgress.current = Math.min(Math.max(raw, 0), 1)
       isVisible.current = window.scrollY < vh * 0.9
     }
@@ -149,7 +149,7 @@ function BottleModel({ scrollProgress }) {
       group.current.rotation.z += (rotZ - group.current.rotation.z) * 0.06
 
       // Scroll zoom
-      const targetZ = sp * 80
+      const targetZ = sp * 75
       group.current.position.z += (targetZ - group.current.position.z) * 0.06
       const targetScale = 1 + sp * 16
       group.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.06)
