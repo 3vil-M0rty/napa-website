@@ -12,7 +12,8 @@
         margin: 0;
         padding: 0;
         background: linear-gradient(160deg, #8b1d1f 0%, #cc5355 45%, #ebb3b3 100%);
-        overflow: hidden;
+        /* NO overflow:hidden here — App.jsx sets it on body programmatically
+           while the loader is visible, then removes it on dismiss */
       }
       #root {
         min-height: 100vh;

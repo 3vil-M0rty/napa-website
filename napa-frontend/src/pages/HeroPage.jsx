@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
 import ScrollSection from '../components/ScrollSection'
+import MobileStack from '../components/MobileStack'
 import * as THREE from 'three'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { useGLTF, useEnvironment } from '@react-three/drei'
@@ -38,7 +39,7 @@ const STRUCTURED_DATA = {
     {
       '@type': 'Product',
       name: 'NAPA Chapter One — MMXXIV First Release',
-      description: 'Single-vine, single-vintage Burgundy wine. Lot 001/320. Bourgogne Appellation. Harvested and bottled at 47°02′N · 4°50′E.',
+      description: 'Single-vine, single-vintage Burgundy wine. Lot 001/320. Bourgogne Appellation. Harvested and bottled at 47°02N · 4°50E.',
       brand: { '@type': 'Brand', name: 'NAPA Chapter One' },
       releaseDate: '2024',
       offers: { '@type': 'Offer', url: 'https://napachapterone.com/reserve', availability: 'https://schema.org/LimitedAvailability' },
@@ -47,14 +48,14 @@ const STRUCTURED_DATA = {
 }
 
 /* =======================
-   HDR BACKGROUND (unchanged)
+   HDR BACKGROUND
 ======================= */
 const HDR_ROTATION_OFFSET = 0
-const MOUSE_PARALLAX      = 0.06
+const MOUSE_PARALLAX = 0.06
 
 function HDRBackground() {
   const { scene } = useThree()
-  const hdr       = useEnvironment({ files: '/scene.hdr' })
+  const hdr = useEnvironment({ files: '/scene.hdr' })
   const sphereRef = useRef()
 
   useEffect(() => {
@@ -81,19 +82,19 @@ function HDRBackground() {
 }
 
 /* =======================
-   BLOB SHADOW (unchanged)
+   BLOB SHADOW
 ======================= */
-function BlobShadow({ scrollProgress }) {
+/* function BlobShadow({ scrollProgress }) {
   const meshRef = useRef()
   const texture = useRef((() => {
     const size = 30
     const c = document.createElement('canvas')
     c.width = size; c.height = size
     const ctx = c.getContext('2d')
-    const g = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2)
-    g.addColorStop(0,   'rgba(10, 0, 2, 0.95)')
+    const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2)
+    g.addColorStop(0, 'rgba(10, 0, 2, 0.95)')
     g.addColorStop(0.5, 'rgba(10, 0, 2, 0.55)')
-    g.addColorStop(1,   'rgba(0, 0, 0, 0)')
+    g.addColorStop(1, 'rgba(0, 0, 0, 0)')
     ctx.fillStyle = g
     ctx.fillRect(0, 0, size, size)
     const t = new THREE.CanvasTexture(c)
@@ -115,52 +116,39 @@ function BlobShadow({ scrollProgress }) {
     </mesh>
   )
 }
-
+ */
 /* =======================
    BOTTLE MODEL
-   — Dramatic scroll zoom: bottle rushes toward camera and rotates
-     to show the label (sticker mesh) dead-center by scroll end.
-   — Label detection: traverses the GLTF scene looking for a mesh
-     whose name contains "label", "sticker", "paper", or "decal"
-     (case-insensitive). Falls back to rotating to Y=0 if not found.
 ======================= */
 function BottleModel({ scrollProgress }) {
-  const model        = useGLTF('/models/bottle.glb')
-  const group        = useRef()
-  const isVisible    = useRef(true)
-  const frozenRotY   = useRef(0)
-  const frozenRotX   = useRef(0)
-  const labelRotY    = useRef(0) // target Y rotation that faces the label toward camera
-  const isTouch      = useRef('ontouchstart' in window || navigator.maxTouchPoints > 0)
+  const model = useGLTF('/models/bottle.glb')
+  const group = useRef()
+  const isVisible = useRef(true)
+  const frozenRotY = useRef(0)
+  const frozenRotX = useRef(0)
+  const labelRotY = useRef(0)
+  const isTouch = useRef('ontouchstart' in window || navigator.maxTouchPoints > 0)
 
   useEffect(() => {
     let labelOffset = 0
-
     model.scene.traverse((child) => {
       if (child.isMesh) {
-        child.castShadow    = true
+        child.castShadow = true
         child.receiveShadow = false
-
-        // Find the label/sticker mesh by name
         const name = (child.name || '').toLowerCase()
         if (
           name.includes('label') ||
           name.includes('sticker') ||
-          name.includes('paper')  ||
-          name.includes('decal')  ||
+          name.includes('paper') ||
+          name.includes('decal') ||
           name.includes('etiquette')
         ) {
-          // The label mesh's local position tells us which side of the bottle it's on.
-          // We compute the angle offset needed so that side faces the camera (Z+).
-          // child.position.x gives the lateral offset on the bottle cylinder.
           const pos = child.getWorldPosition(new THREE.Vector3())
-          labelOffset = Math.atan2(pos.x, pos.z) // angle of the label in world space
-          console.log('[NAPA] Label mesh found:', child.name, '→ rotY offset', labelOffset.toFixed(3))
+          labelOffset = Math.atan2(pos.x, pos.z)
+          console.log('[NAPA] Label mesh found:', child.name, 'rotY offset', labelOffset.toFixed(3))
         }
       }
     })
-
-    // Store as the target rotation the group needs to land on at full scroll
     labelRotY.current = -labelOffset
   }, [model])
 
@@ -175,29 +163,38 @@ function BottleModel({ scrollProgress }) {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [scrollProgress])
 
+  // Replace the entire useFrame callback inside BottleModel with this.
+  // Changes for mobile/touch:
+  //   - No rotation at all
+  //   - Dramatic slow float: larger amplitude, slower sine, gentle side sway
+
   useFrame((state) => {
     if (!group.current) return
     const elapsed = state.clock.elapsedTime
-    const sp      = scrollProgress.current  // 0 → 1
+    const sp = scrollProgress.current
 
-    // ── Idle bob — dampens as bottle zooms in ──
-    const bobAmp = 0.09 * (1 - sp * 0.8)
-    const baseY  = -0.5 + Math.sin(elapsed * 0.9) * bobAmp
+    if (isTouch.current) {
+      // Mobile: dramatic float, zero rotation
+      const floatY = Math.sin(elapsed * 0.5) * 2.22          // slow, big vertical bob
+      const swayX = Math.sin(elapsed * 0.31 + 1.2) * 0.06   // very subtle side drift
+      const breathe = Math.sin(elapsed * 0.7 + 0.5) * 0.03    // tiny z breathe
 
-    // ── Scroll-driven vertical lift: bottle rises slightly as it comes close ──
-    group.current.position.y = baseY + sp * 0.6
+      group.current.position.x += (swayX - group.current.position.x) * 0.03
+      group.current.position.y = -0.5 + floatY + sp * 0.6
+      group.current.position.z += (breathe - group.current.position.z) * 0.03
 
-    // ── Rotation ──
-    // Phase 1 (sp 0–0.5): mouse parallax / auto-spin as before
-    // Phase 2 (sp 0.5–1): smoothly sweep to labelRotY so label faces camera
-    if (sp < 0.5) {
-      // Normal interactive phase
-      if (isTouch.current) {
-        if (isVisible.current) {
-          group.current.rotation.y += 0.003
-          frozenRotY.current = group.current.rotation.y
-        }
-      } else {
+      // Lock rotation completely
+      group.current.rotation.x = 0
+      group.current.rotation.y = 0
+      group.current.rotation.z = 0
+
+    } else {
+      // Desktop: original behaviour
+      const bobAmp = 0.09 * (1 - sp * 0.8)
+      const baseY = -0.5 + Math.sin(elapsed * 0.9) * bobAmp
+      group.current.position.y = baseY + sp * 0.6
+
+      if (sp < 0.5) {
         if (isVisible.current) {
           const targetY = state.mouse.x * Math.PI * 0.18
           const targetX = -state.mouse.y * Math.PI * 0.08
@@ -206,42 +203,32 @@ function BottleModel({ scrollProgress }) {
           frozenRotY.current = group.current.rotation.y
           frozenRotX.current = group.current.rotation.x
         }
+      } else {
+        const t2 = (sp - 0.5) / 0.5
+        const ease = t2 * t2 * (3 - 2 * t2)
+        group.current.rotation.y = frozenRotY.current + (labelRotY.current - frozenRotY.current) * ease
+        group.current.rotation.x = frozenRotX.current * (1 - ease)
       }
-    } else {
-      // Label-reveal phase: blend from frozen rotation → labelRotY
-      const t2 = (sp - 0.5) / 0.5  // 0→1 over the second half of scroll
-      const ease = t2 * t2 * (3 - 2 * t2)  // smoothstep
-      const targetRotY = frozenRotY.current + (labelRotY.current - frozenRotY.current) * ease
-      const targetRotX = frozenRotX.current * (1 - ease) // tilt returns to 0
-      group.current.rotation.y = targetRotY
-      group.current.rotation.x = targetRotX
     }
 
-    // ── DRAMATIC Z zoom ──
-    // Much closer than before: z goes 0 → 24 (was 17)
-    // Plus we push the scale hard for a "punch through the screen" feel
-    const MAX_Z    = 24
-    const targetZ  = sp * MAX_Z
+    // Scroll zoom — both platforms
+    const targetZ = sp * 100
     group.current.position.z += (targetZ - group.current.position.z) * 0.06
 
-    // Scale: 1× at rest → 3.2× fully scrolled
-    const targetScale = 1 + sp * 2.2
-    group.current.scale.lerp(
-      new THREE.Vector3(targetScale, targetScale, targetScale),
-      0.06
-    )
+    const targetScale = 1 + sp * 16
+    group.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.06)
   })
 
   return (
     <group ref={group}>
-      <BlobShadow scrollProgress={scrollProgress} />
+      {/* <BlobShadow scrollProgress={scrollProgress} /> */}
       <primitive object={model.scene} scale={18} position={[0, -1, 0]} />
     </group>
   )
 }
 
 /* =======================
-   CURSOR LIGHT (unchanged)
+   CURSOR LIGHT
 ======================= */
 function CursorLight() {
   const keyLight = useRef()
@@ -294,14 +281,14 @@ function Vignette() {
 }
 
 /* =======================
-   HERO OVERLAY (i18n + responsive)
+   HERO OVERLAY
 ======================= */
 function HeroOverlay() {
   const { t } = useTranslation()
   const fontSerif = "'Cormorant Garamond', 'Cormorant', Georgia, 'Times New Roman', serif"
-  const fontSans  = "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif"
-  const wineRed   = '#A11C24'
-  const inkDark   = '#1a1614'
+  const fontSans = "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+  const wineRed = '#A11C24'
+  const inkDark = '#1a1614'
   const parchment = '#faf6ef'
 
   const [isMobile, setIsMobile] = useState(
@@ -316,20 +303,17 @@ function HeroOverlay() {
   return (
     <div aria-hidden="false" style={{ position: 'absolute', inset: 0, zIndex: 4, pointerEvents: 'none' }}>
 
-      {/* ── RIGHT-SIDE TAGLINE + CTAs ── */}
-      {/* Positioned right of center so the bottle (center) stays the focal point */}
+      {/* Right-side tagline + CTAs */}
       <motion.div
         initial={{ opacity: 0, x: 24 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 2.8, duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
         style={{
           position: 'absolute',
-          // Vertically centered in the lower half
           top: '50%',
           transform: 'translateY(-50%)',
-          // Right column — clear of the bottle which sits center
           right: isMobile ? '1rem' : '3vw',
-          left: isMobile ? '1rem' : '55%', // starts just past bottle center
+          left: isMobile ? '1rem' : '55%',
           display: 'flex',
           flexDirection: 'column',
           alignItems: isMobile ? 'center' : 'flex-end',
@@ -338,7 +322,6 @@ function HeroOverlay() {
           pointerEvents: 'auto',
         }}
       >
-        {/* H1 tagline — SEO primary heading */}
         <h1 style={{
           fontFamily: fontSerif,
           fontStyle: 'italic',
@@ -355,7 +338,6 @@ function HeroOverlay() {
           {t('hero.taglinePost', 'begins now.')}
         </h1>
 
-        {/* CTAs */}
         <div style={{
           display: 'flex',
           flexDirection: isMobile ? 'column' : 'row',
@@ -363,16 +345,15 @@ function HeroOverlay() {
           alignItems: isMobile ? 'center' : 'flex-end',
         }}>
           <Link to="/reserve"
-            aria-label={t('hero.ctaPrimaryAriaLabel', 'Reserve a tasting at NAPA Chapter One — Limited availability')}
+            aria-label={t('hero.ctaPrimaryAriaLabel')}
             style={{ textDecoration: 'none' }}>
-            <button
-              style={{
-                fontFamily: fontSans, fontSize: '10px', fontWeight: 500,
-                letterSpacing: '3px', textTransform: 'uppercase',
-                padding: '12px 24px', background: wineRed, color: parchment,
-                border: 'none', borderRadius: 0, cursor: 'pointer',
-                transition: 'background 0.2s ease', whiteSpace: 'nowrap',
-              }}
+            <button style={{
+              fontFamily: fontSans, fontSize: '10px', fontWeight: 500,
+              letterSpacing: '3px', textTransform: 'uppercase',
+              padding: '12px 24px', background: wineRed, color: parchment,
+              border: 'none', borderRadius: 0, cursor: 'pointer',
+              transition: 'background 0.2s ease', whiteSpace: 'nowrap',
+            }}
               onMouseEnter={e => { e.currentTarget.style.background = '#7a1318' }}
               onMouseLeave={e => { e.currentTarget.style.background = wineRed }}
             >
@@ -381,16 +362,15 @@ function HeroOverlay() {
           </Link>
 
           <Link to="/cellar"
-            aria-label={t('hero.ctaGhostAriaLabel', 'Discover the vintage — NAPA Chapter One MMXXIV')}
+            aria-label={t('hero.ctaGhostAriaLabel')}
             style={{ textDecoration: 'none' }}>
-            <button
-              style={{
-                fontFamily: fontSans, fontSize: '10px', fontWeight: 500,
-                letterSpacing: '3px', textTransform: 'uppercase',
-                padding: '12px 24px', background: 'transparent', color: inkDark,
-                border: `1px solid ${inkDark}`, borderRadius: 0, cursor: 'pointer',
-                transition: 'background 0.2s ease, color 0.2s ease', whiteSpace: 'nowrap',
-              }}
+            <button style={{
+              fontFamily: fontSans, fontSize: '10px', fontWeight: 500,
+              letterSpacing: '3px', textTransform: 'uppercase',
+              padding: '12px 24px', background: 'transparent', color: inkDark,
+              border: `1px solid ${inkDark}`, borderRadius: 0, cursor: 'pointer',
+              transition: 'background 0.2s ease, color 0.2s ease', whiteSpace: 'nowrap',
+            }}
               onMouseEnter={e => { e.currentTarget.style.background = inkDark; e.currentTarget.style.color = parchment }}
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = inkDark }}
             >
@@ -400,7 +380,7 @@ function HeroOverlay() {
         </div>
       </motion.div>
 
-      {/* ── BOTTOM-LEFT ESTATE BLOCK ── */}
+      {/* Bottom-left estate block */}
       <motion.address
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -413,87 +393,63 @@ function HeroOverlay() {
           display: 'flex', flexDirection: 'column', gap: '3px',
         }}
       >
-        <span style={{
-          fontFamily: fontSans, fontSize: '10px', fontWeight: 700,
-          letterSpacing: '3px', textTransform: 'uppercase', color: inkDark,
-        }}>
+        <span style={{ fontFamily: fontSans, fontSize: '10px', fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: inkDark }}>
           {t('hero.estateLabel', 'The Estate')}
         </span>
-        <span style={{
-          fontFamily: fontSans, fontSize: '10px', fontWeight: 400,
-          letterSpacing: '3px', textTransform: 'uppercase', color: 'rgba(26,22,20,0.65)',
-        }}>
+        <span style={{ fontFamily: fontSans, fontSize: '10px', fontWeight: 400, letterSpacing: '3px', textTransform: 'uppercase', color: 'rgba(26,22,20,0.65)' }}>
           {t('hero.estateLocation', 'Bourgogne, France')}
         </span>
         {!isMobile && (
-          <span style={{
-            fontFamily: fontSans, fontSize: '10px', fontWeight: 400,
-            letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(26,22,20,0.5)',
-          }}>
-            47°02&prime;N · 4°50&prime;E
+          <span style={{ fontFamily: fontSans, fontSize: '10px', fontWeight: 400, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(26,22,20,0.5)' }}>
+            47°02N · 4°50E
           </span>
         )}
       </motion.address>
 
-      {/* ── BOTTOM-RIGHT VINTAGE BLOCK ── */}
+      {/* Bottom-right vintage block — desktop only */}
       {!isMobile && (
         <motion.aside
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 3.2, duration: 1.2 }}
-          aria-label={t('hero.vintageAriaLabel', 'Vintage information: MMXXIV First Release, Lot 001 of 320')}
+          aria-label={t('hero.vintageAriaLabel')}
           style={{
-            position: 'absolute',
-            bottom: '2.5rem',
-            right: '3vw',
+            position: 'absolute', bottom: '2.5rem', right: '3vw',
             display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px',
           }}
         >
-          <span style={{
-            fontFamily: fontSerif,
-            fontSize: 'clamp(38px, 4.5vw, 56px)',
-            fontWeight: 600, letterSpacing: '0.04em', color: wineRed, lineHeight: 1,
-          }}>
+          <span style={{ fontFamily: fontSerif, fontSize: 'clamp(38px, 4.5vw, 56px)', fontWeight: 600, letterSpacing: '0.04em', color: wineRed, lineHeight: 1 }}>
             MMXXIV
           </span>
           <span style={{ display: 'block', width: '40px', height: '1px', background: wineRed, alignSelf: 'flex-end' }} />
-          <span style={{
-            fontFamily: fontSans, fontSize: '10px', fontWeight: 400,
-            letterSpacing: '2.5px', textTransform: 'uppercase', color: 'rgba(26,22,20,0.6)',
-          }}>
+          <span style={{ fontFamily: fontSans, fontSize: '10px', fontWeight: 400, letterSpacing: '2.5px', textTransform: 'uppercase', color: 'rgba(26,22,20,0.6)' }}>
             {t('hero.vintageCaption', 'First Release · Lot 001 / 320')}
           </span>
         </motion.aside>
       )}
 
-      {/* ── SCROLL CUE ── */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 3.5, duration: 1.2 }}
-        style={{
-          position: 'absolute', bottom: '1.5rem', left: '50%',
-          transform: 'translateX(-50%)',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
-          // Hidden on mobile — the vintage block and estate block take bottom corners
-          ...(isMobile ? { display: 'none' } : {}),
-        }}
-      >
-        <span style={{
-          fontFamily: fontSans, fontSize: '9px', fontWeight: 500,
-          letterSpacing: '3px', textTransform: 'uppercase', color: wineRed,
-        }}>
-          {t('hero.scroll', 'Scroll')}
-        </span>
-        <motion.span
-          animate={{ opacity: [1, 0.1, 1] }}
-          transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
+      {/* Scroll cue — desktop only */}
+      {!isMobile && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 3.5, duration: 1.2 }}
           style={{
-            display: 'block', width: '1px', height: '40px',
-            background: `linear-gradient(to bottom, ${wineRed}, transparent)`,
+            position: 'absolute', bottom: '1.5rem', left: '50%',
+            transform: 'translateX(-50%)',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
           }}
-        />
-      </motion.div>
+        >
+          <span style={{ fontFamily: fontSans, fontSize: '9px', fontWeight: 500, letterSpacing: '3px', textTransform: 'uppercase', color: 'white' }}>
+            {t('hero.scroll', 'Scroll')}
+          </span>
+          <motion.span
+            animate={{ opacity: [1, 0.1, 1] }}
+            transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
+            style={{ display: 'block', width: '1px', height: '40px', background: `linear-gradient(to bottom, white, transparent)` }}
+          />
+        </motion.div>
+      )}
     </div>
   )
 }
@@ -503,41 +459,50 @@ function HeroOverlay() {
 ======================= */
 export default function HeroPage() {
   const scrollProgress = useRef(0)
-  const { t, i18n }   = useTranslation()
-  const lang          = i18n.language === 'fr' ? 'fr' : 'en'
+  const { t, i18n } = useTranslation()
+  const lang = i18n.language === 'fr' ? 'fr' : 'en'
+
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+  )
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   return (
     <>
       <Helmet>
         <html lang={lang} />
         <title>{t('seo.title', 'NAPA Chapter One — Single-Vine Burgundy Wine | First Release MMXXIV')}</title>
-        <meta name="description" content={t('seo.description', 'NAPA Chapter One: a single-vine, single-vintage Burgundy wine from Bourgogne, France. First Release MMXXIV — Lot 001/320. Reserve your exclusive tasting today.')} />
-        <meta name="keywords"    content={t('seo.keywords',  'NAPA Chapter One, Burgundy wine, Bourgogne, single vine wine, limited edition wine, fine wine France, wine tasting reservation, MMXXIV vintage')} />
-        <link rel="canonical"    href="https://napachapterone.com/" />
+        <meta name="description" content={t('seo.description')} />
+        <meta name="keywords" content={t('seo.keywords')} />
+        <link rel="canonical" href="https://napachapterone.com/" />
 
-        <meta property="og:type"        content="website" />
-        <meta property="og:site_name"   content="NAPA Chapter One" />
-        <meta property="og:title"       content={t('seo.ogTitle', 'NAPA Chapter One — First Release MMXXIV')} />
-        <meta property="og:description" content={t('seo.ogDescription', 'A single vine. A single vintage. Chapter One begins now. Limited to 320 bottles — Bourgogne, France.')} />
-        <meta property="og:image"       content="https://napachapterone.com/og-image.jpg" />
-        <meta property="og:image:alt"   content={t('seo.ogImageAlt', 'NAPA Chapter One bottle — First Release MMXXIV, Bourgogne')} />
-        <meta property="og:url"         content="https://napachapterone.com/" />
-        <meta property="og:locale"      content={lang === 'fr' ? 'fr_FR' : 'en_US'} />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="NAPA Chapter One" />
+        <meta property="og:title" content={t('seo.ogTitle')} />
+        <meta property="og:description" content={t('seo.ogDescription')} />
+        <meta property="og:image" content="https://napachapterone.com/og-image.jpg" />
+        <meta property="og:image:alt" content={t('seo.ogImageAlt')} />
+        <meta property="og:url" content="https://napachapterone.com/" />
+        <meta property="og:locale" content={lang === 'fr' ? 'fr_FR' : 'en_US'} />
         <meta property="og:locale:alternate" content={lang === 'fr' ? 'en_US' : 'fr_FR'} />
 
-        <meta name="twitter:card"        content="summary_large_image" />
-        <meta name="twitter:title"       content={t('seo.ogTitle', 'NAPA Chapter One — First Release MMXXIV')} />
-        <meta name="twitter:description" content={t('seo.ogDescription', 'A single vine. A single vintage. Limited to 320 bottles. Reserve a tasting in Bourgogne, France.')} />
-        <meta name="twitter:image"       content="https://napachapterone.com/og-image.jpg" />
-        <meta name="twitter:image:alt"   content={t('seo.ogImageAlt', 'NAPA Chapter One wine bottle — MMXXIV')} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={t('seo.ogTitle')} />
+        <meta name="twitter:description" content={t('seo.ogDescription')} />
+        <meta name="twitter:image" content="https://napachapterone.com/og-image.jpg" />
+        <meta name="twitter:image:alt" content={t('seo.ogImageAlt')} />
 
-        <meta name="geo.region"    content="FR-21" />
+        <meta name="geo.region" content="FR-21" />
         <meta name="geo.placename" content="Bourgogne, France" />
-        <meta name="geo.position"  content="47.0333;4.8333" />
-        <meta name="ICBM"          content="47.0333, 4.8333" />
-        <meta name="robots"        content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
-        <meta name="author"        content="NAPA Chapter One" />
-        <meta name="theme-color"   content="#A11C24" />
+        <meta name="geo.position" content="47.0333;4.8333" />
+        <meta name="ICBM" content="47.0333, 4.8333" />
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+        <meta name="author" content="NAPA Chapter One" />
+        <meta name="theme-color" content="#A11C24" />
 
         <link
           href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@400;500;700&display=swap"
@@ -548,13 +513,17 @@ export default function HeroPage() {
 
       <main id="main-content">
         <section
-          aria-label={t('hero.sectionAriaLabel', 'NAPA Chapter One — First Release MMXXIV, Bourgogne, France')}
+          aria-label={t('hero.sectionAriaLabel')}
           style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}
         >
           <Canvas
-            shadows={{ type: THREE.PCFSoftShadowMap }}
+            shadows                    // deprecated PCFSoftShadowMap removed — r3f default is PCFShadowMap
             camera={{ position: [0, 1.5, 20], fov: 50 }}
-            gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.1 }}
+            gl={{
+              antialias: true,
+              toneMapping: THREE.ACESFilmicToneMapping,
+              toneMappingExposure: 1.1,
+            }}
             dpr={[1, Math.min(window.devicePixelRatio, 2)]}
             style={{ position: 'absolute', inset: 0, zIndex: 1 }}
             aria-hidden="true"
@@ -564,14 +533,22 @@ export default function HeroPage() {
               <ResponsiveCamera />
               <ambientLight intensity={0.3} color="#ffccd5" />
               <directionalLight
-                position={[3, 14, 8]} intensity={3.5} color="#fff5e0" castShadow
-                shadow-mapSize-width={2048} shadow-mapSize-height={2048}
-                shadow-camera-near={0.5} shadow-camera-far={40}
-                shadow-camera-left={-8} shadow-camera-right={8}
-                shadow-camera-top={8} shadow-camera-bottom={-8}
-                shadow-bias={-0.0004} shadow-radius={6}
+                position={[3, 14, 8]}
+                intensity={3.5}
+                color="#fff5e0"
+                castShadow
+                shadow-mapSize-width={2048}
+                shadow-mapSize-height={2048}
+                shadow-camera-near={0.5}
+                shadow-camera-far={40}
+                shadow-camera-left={-8}
+                shadow-camera-right={8}
+                shadow-camera-top={8}
+                shadow-camera-bottom={-8}
+                shadow-bias={-0.0004}
+                shadow-radius={6}
               />
-              <directionalLight position={[5, 2, 4]}   intensity={0.8} color="#ffb870" castShadow={false} />
+              <directionalLight position={[5, 2, 4]} intensity={0.8} color="#ffb870" castShadow={false} />
               <directionalLight position={[-5, 6, -8]} intensity={1.4} color="#7baeff" castShadow={false} />
               <CursorLight />
               <BottleModel scrollProgress={scrollProgress} />
@@ -583,9 +560,19 @@ export default function HeroPage() {
           <HeroOverlay />
         </section>
 
-        <ScrollSection />
-        <div style={{ height: '100vh', width: '100%' }} />
+        {/*
+          Desktop: full GSAP sticky-track clip-path animation
+          Mobile:  pure CSS sticky card stack (MobileStack)
+          Rendered conditionally via React state to avoid
+          mounting GSAP/ScrollTrigger on mobile at all.
+        */}
+
+
       </main>
+      <MobileStack />
+      <ScrollSection />
+
+      <div style={{ height: '100vh', width: '100%' }} />
     </>
   )
 }

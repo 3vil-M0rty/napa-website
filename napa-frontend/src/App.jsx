@@ -1,10 +1,9 @@
 // src/App.jsx
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { useProgress } from '@react-three/drei'
 import { motion, AnimatePresence } from 'framer-motion'
-import { gsap } from 'gsap'
 
 import Navbar         from './components/Navbar'
 import Cursor         from './components/Cursor'
@@ -14,90 +13,95 @@ import AuthPage       from './pages/AuthPage'
 import MyBookingsPage from './pages/MyBookingsPage'
 import AdminPage      from './pages/AdminPage'
 import NapaCo         from './assets/napasolo.svg?react'
+import { SLIDES }     from './components/ScrollSection'
 
-/* ─── CONSTANTS ──────────────────────────────────────────────────────────── */
-const MIN_DISPLAY_MS   = 3200   // minimum loader visibility
-const DRAW_DURATION_MS = 2800   // SVG stroke animation duration
-const FONT_FAMILY      = "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+/* =========================================================
+   PRELOAD ALL SCROLL SECTION IMAGES
+   Returns a Promise that resolves when every image has loaded
+   (or failed — we never reject so a 404 can't block the loader).
+========================================================= */
+const slideImagePromise = Promise.all(
+  SLIDES.flatMap(s => [s.background, s.img]).map(
+    src =>
+      new Promise(resolve => {
+        const img   = new Image()
+        img.onload  = resolve
+        img.onerror = resolve   // silent fail — still unblocks the loader
+        img.src     = src
+      })
+  )
+)
+
+/* =========================================================
+   CONSTANTS
+========================================================= */
+const MIN_DISPLAY_MS   = 3200
+const DRAW_DURATION_MS = 2800
 const WINE_RED         = '#8b1d1f'
 const ROSE             = '#cc5355'
 const BLUSH            = '#ebb3b3'
+const FONT_SANS        = "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif"
 
-/* ─── LOADER OVERLAY ────────────────────────────────────────────────────── */
+/* =========================================================
+   LOADER OVERLAY
+========================================================= */
 function LoaderOverlay({ progress }) {
   const svgRef       = useRef(null)
   const pathsRef     = useRef([])
   const animStartRef = useRef(null)
   const rafRef       = useRef(null)
 
-  // ── 1. Inject a <style> tag into <head> immediately so the background
-  //       color shows before React even mounts (prevents white flash).
-  //       We do this once, outside of any effect.
-  // ── 2. Measure SVG paths and kick off the stroke animation imperatively
-  //       using rAF so we don't depend on React re-renders.
-
   useEffect(() => {
     const svg = svgRef.current
     if (!svg) return
 
-    // Wait one rAF for the SVG to be in the DOM and laid out
     const setup = () => {
       const els = Array.from(
         svg.querySelectorAll('path, polyline, line, circle, ellipse, rect, polygon')
       )
-
       if (!els.length) {
-        // SVG not ready yet — retry next frame
         rafRef.current = requestAnimationFrame(setup)
         return
       }
 
-      // Measure and initialise every path
-      els.forEach((el) => {
+      els.forEach(el => {
         let len = 0
         try { len = el.getTotalLength?.() ?? 0 } catch (_) {}
-        if (!len) len = 400 // safe fallback for elements without getTotalLength
+        if (!len) len = 400
 
-        el.style.fill            = 'none'
-        el.style.stroke          = '#faf6ef'
-        el.style.strokeWidth     = '1.2px'
-        el.style.strokeDasharray = `${len}`
+        el.style.fill             = 'none'
+        el.style.stroke           = '#faf6ef'
+        el.style.strokeWidth      = '1.2px'
+        el.style.strokeDasharray  = `${len}`
         el.style.strokeDashoffset = `${len}`
-        el.style.transition      = 'none'
+        el.style.transition       = 'none'
       })
 
-      pathsRef.current = els
-      svg.style.opacity = '1'
+      pathsRef.current     = els
+      svg.style.opacity    = '1'
       animStartRef.current = Date.now()
 
-      // Kick off the draw loop
       const draw = () => {
-        const elapsed  = Date.now() - animStartRef.current
-        const timeFrac = Math.min(1, elapsed / DRAW_DURATION_MS)
-        // Ease-in-out cubic
-        const eased = timeFrac < 0.5
-          ? 4 * timeFrac ** 3
-          : 1 - (-2 * timeFrac + 2) ** 3 / 2
+        const elapsed = Date.now() - animStartRef.current
+        const t       = Math.min(1, elapsed / DRAW_DURATION_MS)
+        const eased   = t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2
 
-        els.forEach((el) => {
+        els.forEach(el => {
           let len = 0
           try { len = el.getTotalLength?.() ?? 400 } catch (_) { len = 400 }
           el.style.strokeDashoffset = `${len * (1 - eased)}`
         })
 
-        if (timeFrac < 1) {
-          rafRef.current = requestAnimationFrame(draw)
-        }
+        if (t < 1) rafRef.current = requestAnimationFrame(draw)
       }
-
       rafRef.current = requestAnimationFrame(draw)
     }
 
     rafRef.current = requestAnimationFrame(setup)
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }
-  }, []) // runs once on mount
+  }, [])
 
-  const isMobile = window.innerWidth < 768
+  const isMobile        = window.innerWidth < 768
   const displayProgress = Math.round(Math.min(progress, 100))
 
   return (
@@ -117,7 +121,7 @@ function LoaderOverlay({ progress }) {
         overflow:       'hidden',
       }}
     >
-      {/* SVG — pinned bottom-left on desktop, centered on mobile */}
+      {/* SVG logo draw */}
       <NapaCo
         ref={svgRef}
         aria-hidden="true"
@@ -129,50 +133,47 @@ function LoaderOverlay({ progress }) {
           width:     'min(500px, 90vw)',
           height:    'auto',
           display:   'block',
-          opacity:   0,              // shown after paths are measured
+          opacity:   0,
         }}
       />
 
-      {/* Progress indicator — centered in the screen */}
+      {/* Progress indicator */}
       <div style={{
-        position:       'absolute',
-        bottom:         isMobile ? '3rem' : '2.5rem',
-        left:           '50%',
-        transform:      'translateX(-50%)',
-        display:        'flex',
-        flexDirection:  'column',
-        alignItems:     'center',
-        gap:            '10px',
-        pointerEvents:  'none',
+        position:      'absolute',
+        bottom:        isMobile ? '3rem' : '2.5rem',
+        left:          '50%',
+        transform:     'translateX(-50%)',
+        display:       'flex',
+        flexDirection: 'column',
+        alignItems:    'center',
+        gap:           '10px',
+        pointerEvents: 'none',
       }}>
-        {/* Percentage */}
         <span style={{
-          fontFamily:   FONT_FAMILY,
-          fontSize:     '11px',
-          fontWeight:   500,
-          letterSpacing:'3px',
-          textTransform:'uppercase',
-          color:        'rgba(250,246,239,0.7)',
+          fontFamily:         FONT_SANS,
+          fontSize:           '11px',
+          fontWeight:         500,
+          letterSpacing:      '3px',
+          textTransform:      'uppercase',
+          color:              'rgba(250,246,239,0.7)',
           fontVariantNumeric: 'tabular-nums',
-          minWidth:     '3ch',
-          textAlign:    'center',
+          minWidth:           '3ch',
+          textAlign:          'center',
         }}>
           {displayProgress}%
         </span>
 
-        {/* Track */}
         <div style={{
-          width:        'min(200px, 55vw)',
-          height:       '1px',
-          background:   'rgba(250,246,239,0.18)',
-          position:     'relative',
-          overflow:     'hidden',
+          width:      'min(200px, 55vw)',
+          height:     '1px',
+          background: 'rgba(250,246,239,0.18)',
+          position:   'relative',
+          overflow:   'hidden',
         }}>
-          {/* Fill — driven by progress prop */}
           <motion.div
             style={{
               position:   'absolute',
-              top:        0, left: 0, bottom: 0,
+              top: 0, left: 0, bottom: 0,
               background: 'rgba(250,246,239,0.75)',
               originX:    0,
             }}
@@ -181,9 +182,8 @@ function LoaderOverlay({ progress }) {
           />
         </div>
 
-        {/* Label */}
         <span style={{
-          fontFamily:    FONT_FAMILY,
+          fontFamily:    FONT_SANS,
           fontSize:      '9px',
           fontWeight:    400,
           letterSpacing: '3px',
@@ -197,23 +197,35 @@ function LoaderOverlay({ progress }) {
   )
 }
 
-/* ─── GLOBAL LOADER CONTROLLER ───────────────────────────────────────────── */
+/* =========================================================
+   GLOBAL LOADER CONTROLLER
+   Waits for:
+     1. Three.js assets (bottle.glb + HDR) via useProgress
+     2. All ScrollSection images via slideImagePromise
+     3. Minimum display time (MIN_DISPLAY_MS)
+========================================================= */
 function GlobalLoader() {
-  const { progress }      = useProgress()
-  const [visible, setVisible] = useState(true)
-  const openedAt          = useRef(Date.now())
+  const { progress }                  = useProgress()
+  const [imagesReady, setImagesReady] = useState(false)
+  const [visible, setVisible]         = useState(true)
+  const openedAt                      = useRef(Date.now())
 
+  // Wait for all slide images to be cached
   useEffect(() => {
-    if (progress < 100) return
+    slideImagePromise.then(() => setImagesReady(true))
+  }, [])
 
-    const elapsed  = Date.now() - openedAt.current
+  // Dismiss only when THREE assets + slide images + min time all satisfied
+  useEffect(() => {
+    if (progress < 100 || !imagesReady) return
+
+    const elapsed   = Date.now() - openedAt.current
     const remaining = Math.max(0, MIN_DISPLAY_MS - elapsed)
-
     const t = setTimeout(() => setVisible(false), remaining)
     return () => clearTimeout(t)
-  }, [progress])
+  }, [progress, imagesReady])
 
-  // Lock scroll while loader is shown
+  // Lock scroll while loading
   useEffect(() => {
     document.body.style.overflow = visible ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
@@ -226,10 +238,10 @@ function GlobalLoader() {
   )
 }
 
-/* ─── CRITICAL: inject background color synchronously ───────────────────── */
-// This <style> tag fires before any JS bundle evaluates, preventing
-// the white page flash. It's inlined here so Vite hoists it into the
-// <head> via the module import side-effect.
+/* =========================================================
+   CRITICAL: paint the gradient before JS evaluates
+   Prevents white flash on first load.
+========================================================= */
 if (typeof document !== 'undefined') {
   const existing = document.getElementById('napa-loader-critical')
   if (!existing) {
@@ -237,16 +249,15 @@ if (typeof document !== 'undefined') {
     style.id = 'napa-loader-critical'
     style.textContent = `
       html, body { margin: 0; padding: 0; }
-      body {
-        background: linear-gradient(160deg, #8b1d1f 0%, #cc5355 45%, #ebb3b3 100%);
-        overflow: hidden;
-      }
+      body { background: linear-gradient(160deg, #8b1d1f 0%, #cc5355 45%, #ebb3b3 100%); }
     `
     document.head.appendChild(style)
   }
 }
 
-/* ─── APP ────────────────────────────────────────────────────────────────── */
+/* =========================================================
+   APP
+========================================================= */
 export default function App() {
   return (
     <>
@@ -254,11 +265,11 @@ export default function App() {
       <Cursor />
       <Navbar />
       <Routes>
-        <Route path="/"            element={<HeroPage />} />
-        <Route path="/reserve"     element={<ReservePage />} />
-        <Route path="/auth"        element={<AuthPage />} />
-        <Route path="/bookings"    element={<MyBookingsPage />} />
-        <Route path="/admin"       element={<AdminPage />} />
+        <Route path="/"         element={<HeroPage />} />
+        <Route path="/reserve"  element={<ReservePage />} />
+        <Route path="/auth"     element={<AuthPage />} />
+        <Route path="/bookings" element={<MyBookingsPage />} />
+        <Route path="/admin"    element={<AdminPage />} />
       </Routes>
     </>
   )
