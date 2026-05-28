@@ -149,7 +149,7 @@ function BottleModel({ scrollProgress }) {
       group.current.rotation.z += (rotZ - group.current.rotation.z) * 0.06
 
       // Scroll zoom
-      const targetZ = sp * 90
+      const targetZ = sp * 80
       group.current.position.z += (targetZ - group.current.position.z) * 0.06
       const targetScale = 1 + sp * 16
       group.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.06)
