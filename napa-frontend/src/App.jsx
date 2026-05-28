@@ -16,26 +16,39 @@ import NapaCo         from './assets/napasolo.svg?react'
 import { SLIDES }     from './components/ScrollSection'
 
 /* =========================================================
-   PRELOAD ALL SCROLL SECTION IMAGES
-   Returns a Promise that resolves when every image has loaded
-   (or failed — we never reject so a 404 can't block the loader).
+   TIMING DIAGNOSTICS
+   Open DevTools console — you'll see exactly what's slow.
 ========================================================= */
-const slideImagePromise = Promise.all(
-  SLIDES.flatMap(s => [s.background, s.img]).map(
-    src =>
-      new Promise(resolve => {
-        const img   = new Image()
-        img.onload  = resolve
-        img.onerror = resolve   // silent fail — still unblocks the loader
-        img.src     = src
-      })
-  )
-)
+const T0 = Date.now()
+const log = (msg) => console.log(`[NAPA loader] +${Date.now() - T0}ms — ${msg}`)
+
+log('App.jsx evaluated')
 
 /* =========================================================
-   CONSTANTS
+   PRELOAD SLIDE IMAGES
+   — only the first image of each slide (background),
+     portrait images load lazily after the loader dismisses.
+   — times each image individually so you can see which is slow.
 ========================================================= */
-const MIN_DISPLAY_MS   = 3200
+const slideImagePromise = Promise.all(
+  SLIDES.map((s, i) => {
+    const src = s.background
+    const t   = Date.now()
+    return new Promise(resolve => {
+      const img   = new Image()
+      img.onload  = () => { log(`slide[${i}] bg loaded: ${src} (${Date.now() - t}ms)`); resolve() }
+      img.onerror = () => { log(`slide[${i}] bg FAILED: ${src} (${Date.now() - t}ms)`); resolve() }
+      img.src     = src
+    })
+  })
+)
+
+slideImagePromise.then(() => log('ALL slide images done'))
+
+/* =========================================================
+   CONSTANTS — reduced minimum display time
+========================================================= */
+const MIN_DISPLAY_MS   = 1200   // was 3200 — only cosmetic minimum now
 const DRAW_DURATION_MS = 2800
 const WINE_RED         = '#8b1d1f'
 const ROSE             = '#cc5355'
@@ -70,7 +83,7 @@ function LoaderOverlay({ progress }) {
         if (!len) len = 400
 
         el.style.fill             = 'none'
-        el.style.stroke           = '#faf6ef'
+        el.style.stroke           = '#8b1d1f'
         el.style.strokeWidth      = '1.2px'
         el.style.strokeDasharray  = `${len}`
         el.style.strokeDashoffset = `${len}`
@@ -121,7 +134,6 @@ function LoaderOverlay({ progress }) {
         overflow:       'hidden',
       }}
     >
-      {/* SVG logo draw */}
       <NapaCo
         ref={svgRef}
         aria-hidden="true"
@@ -137,7 +149,6 @@ function LoaderOverlay({ progress }) {
         }}
       />
 
-      {/* Progress indicator */}
       <div style={{
         position:      'absolute',
         bottom:        isMobile ? '3rem' : '2.5rem',
@@ -155,7 +166,7 @@ function LoaderOverlay({ progress }) {
           fontWeight:         500,
           letterSpacing:      '3px',
           textTransform:      'uppercase',
-          color:              'rgba(250,246,239,0.7)',
+          color:              '#8b1d1f',
           fontVariantNumeric: 'tabular-nums',
           minWidth:           '3ch',
           textAlign:          'center',
@@ -166,7 +177,7 @@ function LoaderOverlay({ progress }) {
         <div style={{
           width:      'min(200px, 55vw)',
           height:     '1px',
-          background: 'rgba(250,246,239,0.18)',
+          background: '#8b1d1f',
           position:   'relative',
           overflow:   'hidden',
         }}>
@@ -174,7 +185,7 @@ function LoaderOverlay({ progress }) {
             style={{
               position:   'absolute',
               top: 0, left: 0, bottom: 0,
-              background: 'rgba(250,246,239,0.75)',
+              background: '#8b1d1f',
               originX:    0,
             }}
             animate={{ width: `${displayProgress}%` }}
@@ -188,7 +199,7 @@ function LoaderOverlay({ progress }) {
           fontWeight:    400,
           letterSpacing: '3px',
           textTransform: 'uppercase',
-          color:         'rgba(250,246,239,0.4)',
+          color:         '#8b1d1f',
         }}>
           Loading
         </span>
@@ -199,33 +210,45 @@ function LoaderOverlay({ progress }) {
 
 /* =========================================================
    GLOBAL LOADER CONTROLLER
-   Waits for:
-     1. Three.js assets (bottle.glb + HDR) via useProgress
-     2. All ScrollSection images via slideImagePromise
-     3. Minimum display time (MIN_DISPLAY_MS)
 ========================================================= */
 function GlobalLoader() {
-  const { progress }                  = useProgress()
-  const [imagesReady, setImagesReady] = useState(false)
-  const [visible, setVisible]         = useState(true)
-  const openedAt                      = useRef(Date.now())
+  const { progress, total, loaded, item } = useProgress()
+  const [imagesReady, setImagesReady]     = useState(false)
+  const [visible, setVisible]             = useState(true)
+  const openedAt                          = useRef(Date.now())
+  const threeReadyAt                      = useRef(null)
+  const imagesReadyAt                     = useRef(null)
 
-  // Wait for all slide images to be cached
+  // Log Three.js progress every time it changes
   useEffect(() => {
-    slideImagePromise.then(() => setImagesReady(true))
+    log(`three.js progress=${progress}% loaded=${loaded}/${total} item="${item}"`)
+    if (progress >= 100 && !threeReadyAt.current) {
+      threeReadyAt.current = Date.now()
+      log(`THREE READY at +${threeReadyAt.current - T0}ms`)
+    }
+  }, [progress, total, loaded, item])
+
+  useEffect(() => {
+    slideImagePromise.then(() => {
+      imagesReadyAt.current = Date.now()
+      log(`IMAGES READY at +${imagesReadyAt.current - T0}ms`)
+      setImagesReady(true)
+    })
   }, [])
 
-  // Dismiss only when THREE assets + slide images + min time all satisfied
   useEffect(() => {
     if (progress < 100 || !imagesReady) return
 
     const elapsed   = Date.now() - openedAt.current
     const remaining = Math.max(0, MIN_DISPLAY_MS - elapsed)
-    const t = setTimeout(() => setVisible(false), remaining)
+    log(`Both ready — waiting ${remaining}ms more (min display), then dismissing`)
+    const t = setTimeout(() => {
+      log(`LOADER DISMISSED at +${Date.now() - T0}ms`)
+      setVisible(false)
+    }, remaining)
     return () => clearTimeout(t)
   }, [progress, imagesReady])
 
-  // Lock scroll while loading
   useEffect(() => {
     document.body.style.overflow = visible ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
@@ -238,10 +261,6 @@ function GlobalLoader() {
   )
 }
 
-/* =========================================================
-   CRITICAL: paint the gradient before JS evaluates
-   Prevents white flash on first load.
-========================================================= */
 if (typeof document !== 'undefined') {
   const existing = document.getElementById('napa-loader-critical')
   if (!existing) {
@@ -255,9 +274,6 @@ if (typeof document !== 'undefined') {
   }
 }
 
-/* =========================================================
-   APP
-========================================================= */
 export default function App() {
   return (
     <>
