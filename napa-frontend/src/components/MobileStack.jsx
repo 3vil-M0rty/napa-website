@@ -1,281 +1,278 @@
-import { useRef, useEffect, useState } from "react";
-import { SLIDES } from "./ScrollSection";
+// MobileStack.jsx
+// Mobile-only: sticky card stack — each card pins at top:0
+// while the next card scrolls up over it.
+// COMPLETELY ISOLATED — zero shared classnames with ScrollSection or anything else.
+// All classnames prefixed with "mbs__" to guarantee no collision.
 
-const CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Montserrat:wght@200;300;400&display=swap');
+import { useEffect } from 'react'
+import { SLIDES } from './ScrollSection'
 
-  :root {
-    --ease-silk: cubic-bezier(0.23, 1, 0.32, 1);
-    --gold:      #c9a96e;
-    --cream:     #f5f0e8;
-  }
+/* ─── ISOLATED CSS ───────────────────────────────────────────────────────── */
+const MBS_CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300;1,400&family=Montserrat:wght@200;300&display=swap');
 
-  /* ── Wrapper: clip horizontal overflow here at the top level only ── */
-  .ms-wrapper {
-    position: relative;
-    width: 100%;
-    overflow-x: clip;   /* clip (not hidden) — doesn't create a scroll container,
-                           so sticky children inside still work correctly */
-    overflow-y: visible;
-    max-width: 100%;
-  contain: layout style; 
-  }
-
-  @media (min-width: 768px) {
-    .ms-wrapper { display: none; }
-  }
-
-  /*
-    Each slide is a tall scroll-container for its sticky child.
-    Height = 200vh for all except last (100vh) so the card
-    stays pinned long enough for the next to rise over it.
-
-    CRITICAL: NO overflow on .ms-slide — any overflow value
-    other than visible breaks position:sticky inside it.
-  */
-  .ms-slide {
-    position: relative;
-    /* height set via inline style */
-  }
-
-  /*
-    The sticky panel pins at top:0 and is always 100vh tall.
-    z-index increments per slide so each new card is visually
-    above the previous one — the natural scroll rise does the
-    "covering" effect without any JS or clip-path needed.
-  */
-  .ms-sticky {
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    height: 100svh;
-    width: 100%;
-    overflow: hidden;       /* safe here — clips bg bleed inside the sticky panel */
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-  }
-
-  /* Background: vertical oversize only — NO horizontal bleed */
-  .ms-bg {
-    position: absolute;
-    inset: -8% 0;           /* top/bottom oversize for parallax; left/right flush */
-    background-size: cover;
-    background-position: center;
-    will-change: transform;
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-  }
-
-  .ms-overlay-top {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    background: linear-gradient(to bottom, rgba(10,10,9,.40) 0%, transparent 30%);
-    pointer-events: none;
-  }
-  .ms-overlay-bottom {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    background: linear-gradient(to top, rgba(10,10,9,.78) 0%, rgba(10,10,9,.12) 50%, transparent 72%);
-    pointer-events: none;
-  }
-
-  .ms-img-wrap {
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-  }
-  .ms-img {
+/* ── Only show on phones ── */
+.mbs__section {
+  display: none;
+}
+@media (max-width: 767px) {
+  .mbs__section {
     display: block;
-    width: 66%;
-    max-width: 300px;
-    aspect-ratio: 3 / 4;
-    object-fit: cover;
-    border-radius: 2px;
-    transform: translateY(-6%);
-    box-shadow: 0 36px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(201,169,110,.15);
+    /* CRITICAL: kill any horizontal overflow at this root */
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+    /* no overflow-y — must not create a scroll container */
+    position: relative;
   }
-
-  .ms-text {
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    z-index: 3;
-    padding: 0 28px 54px;
-    text-align: center;
-    pointer-events: none;
-    opacity: 0;
-    transform: translateY(14px);
-    transition: opacity .7s var(--ease-silk), transform .7s var(--ease-silk);
-  }
-  .ms-text.visible { opacity: 1; transform: translateY(0); }
-
-  .ms-slide-num {
-    display: block;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 200; font-size: 10px;
-    letter-spacing: .32em; color: var(--gold);
-    text-transform: uppercase; margin-bottom: 12px;
-  }
-  .ms-rule {
-    display: block; width: 26px; height: 1px;
-    background: var(--gold); opacity: .5; margin: 0 auto 12px;
-  }
-  .ms-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-style: italic; font-weight: 300;
-    font-size: clamp(26px, 8.5vw, 38px);
-    line-height: 1.08; color: var(--cream);
-    letter-spacing: .01em; margin: 0 0 8px;
-  }
-  .ms-sub {
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 200; font-size: 10px;
-    letter-spacing: .24em; color: rgba(245,240,232,.6);
-    text-transform: uppercase;
-  }
-
-  .ms-badge {
-    position: absolute; top: 26px; right: 22px;
-    z-index: 3;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 200; font-size: 10px;
-    letter-spacing: .22em; color: rgba(201,169,110,.65);
-    text-transform: uppercase;
-  }
-`;
-
-function Slide({ slide, index, total }) {
-  const stickyRef = useRef(null);
-  const bgRef     = useRef(null);
-  const textRef   = useRef(null);
-  const rafRef    = useRef(null);
-  const [textVisible, setTextVisible] = useState(index === 0);
-
-  useEffect(() => {
-    const sticky = stickyRef.current;
-    const bg     = bgRef.current;
-    if (!sticky || !bg) return;
-
-    const onScroll = () => {
-      if (rafRef.current) return;
-      rafRef.current = requestAnimationFrame(() => {
-        rafRef.current = null;
-        const rect = sticky.getBoundingClientRect();
-        const vh   = window.innerHeight;
-
-        // How far this panel has scrolled past the top (0→1)
-        const progress = Math.max(0, Math.min(1, -rect.top / vh));
-
-        // Parallax: bg drifts up slightly as we scroll through
-        bg.style.transform = `translateZ(0) translateY(${progress * 8}%)`;
-
-        // Show text when panel is on screen
-        const onScreen = rect.top < vh * 0.88 && rect.bottom > 0;
-        setTextVisible(onScreen);
-      });
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, []);
-
-  const label = slide.altFallback || `Slide ${index + 1}`;
-  const sub   = slide.subKey      || "";
-  const alt   = slide.bgAlt       || label;
-
-  /*
-    Slot height:
-    - Slides 0…N-2: 200svh — the card is visible for 100svh then
-      the next card scrolls up over it during the second 100svh.
-    - Last slide: 100svh — nothing needs to scroll over it.
-  */
-  const isLast    = index === total - 1;
-  const slotHeight = isLast ? "100svh" : "200svh";
-
-  return (
-    <div
-      className="ms-slide"
-      style={{ height: slotHeight, zIndex: index + 1 }}
-    >
-      <div className="ms-sticky" ref={stickyRef}>
-
-        {/* Background */}
-        <div
-          className="ms-bg"
-          ref={bgRef}
-          role="img"
-          aria-label={alt}
-          style={{
-            backgroundImage:  slide.background ? `url(${slide.background})` : "none",
-            backgroundColor: "#1a1510",
-          }}
-        />
-
-        <div className="ms-overlay-top"    aria-hidden="true" />
-        <div className="ms-overlay-bottom" aria-hidden="true" />
-
-        {/* Foreground portrait */}
-        <div className="ms-img-wrap">
-          <img
-            className="ms-img"
-            src={slide.img || ""}
-            alt={alt}
-            loading="eager"
-            decoding="sync"
-          />
-        </div>
-
-        {/* Badge */}
-        <div className="ms-badge" aria-hidden="true">
-          {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
-        </div>
-
-        {/* Text */}
-        <div
-          className={`ms-text${textVisible ? " visible" : ""}`}
-          ref={textRef}
-        >
-          <span className="ms-slide-num">{slide.slug || `Chapter ${index + 1}`}</span>
-          <div className="ms-rule" aria-hidden="true" />
-          <h2 className="ms-title">{label}</h2>
-          {sub && <p className="ms-sub">{sub}</p>}
-        </div>
-
-      </div>
-    </div>
-  );
 }
 
+/*
+  Each slide occupies 200svh of scroll distance except the last (100svh).
+  CRITICAL: NO overflow property on .mbs__slide — any value except
+  the default "visible" breaks position:sticky inside it.
+*/
+.mbs__slide {
+  position: relative;
+  width: 100%;
+}
+
+/*
+  The sticky panel pins at top:0 for 100svh.
+  overflow:hidden here is safe — it only clips the panel's own
+  contents, not the sticky positioning mechanism.
+  z-index increments so each new card visually covers the previous.
+*/
+.mbs__pin {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Background image — vertically oversized for parallax, flush horizontally */
+.mbs__bg {
+  position: absolute;
+  top: -8%;
+  left: 0;
+  right: 0;
+  bottom: -8%;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  will-change: transform;
+}
+
+/* Dark overlays */
+.mbs__ov-top {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(8,6,4,.45) 0%, transparent 35%);
+  pointer-events: none;
+}
+.mbs__ov-bot {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(8,6,4,.85) 0%, rgba(8,6,4,.15) 55%, transparent 75%);
+  pointer-events: none;
+}
+
+/* Portrait image — centred, lifted slightly */
+.mbs__portrait-wrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.mbs__portrait {
+  display: block;
+  width: 62%;
+  max-width: 280px;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 2px;
+  transform: translateY(-5%);
+  box-shadow: 0 32px 72px rgba(0,0,0,.65), 0 0 0 1px rgba(201,169,110,.12);
+}
+
+/* Badge top-right */
+.mbs__badge {
+  position: absolute;
+  top: 24px;
+  right: 20px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 9px;
+  font-weight: 200;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: rgba(201,169,110,.6);
+  pointer-events: none;
+}
+
+/* Text block bottom-centre — fades in via .mbs__text--visible */
+.mbs__text {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0 26px 50px;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity .65s cubic-bezier(.23,1,.32,1),
+              transform .65s cubic-bezier(.23,1,.32,1);
+}
+.mbs__text--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.mbs__slug {
+  display: block;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 9px;
+  font-weight: 200;
+  letter-spacing: .32em;
+  text-transform: uppercase;
+  color: #c9a96e;
+  margin-bottom: 10px;
+}
+.mbs__rule {
+  display: block;
+  width: 24px;
+  height: 1px;
+  background: #c9a96e;
+  opacity: .5;
+  margin: 0 auto 10px;
+}
+.mbs__title {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(24px, 8vw, 36px);
+  line-height: 1.08;
+  color: #f5f0e8;
+  letter-spacing: .01em;
+  margin: 0 0 6px;
+}
+.mbs__sub {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 9px;
+  font-weight: 200;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: rgba(245,240,232,.55);
+}
+`
+
+/* ─── COMPONENT ──────────────────────────────────────────────────────────── */
 export default function MobileStack() {
+
+  /* Inject isolated stylesheet once */
   useEffect(() => {
-    const id = "ms-styles-v5";
-    if (document.getElementById(id)) return;
-    const el = document.createElement("style");
-    el.id = id;
-    el.textContent = CSS;
-    document.head.appendChild(el);
-    return () => document.getElementById(id)?.remove();
-  }, []);
+    const ID = 'mbs-styles-v1'
+    if (document.getElementById(ID)) return
+    const el = document.createElement('style')
+    el.id = ID
+    el.textContent = MBS_CSS
+    document.head.appendChild(el)
+    return () => document.getElementById(ID)?.remove()
+  }, [])
+
+  /* Scroll handler: parallax + text fade */
+  useEffect(() => {
+    const pins   = document.querySelectorAll('.mbs__pin')
+    const bgs    = document.querySelectorAll('.mbs__bg')
+    const texts  = document.querySelectorAll('.mbs__text')
+    const VH     = () => window.innerHeight
+
+    const onScroll = () => {
+      const vh = VH()
+      pins.forEach((pin, i) => {
+        const rect = pin.getBoundingClientRect()
+
+        /* Parallax: bg drifts up as card scrolls through */
+        const progress = Math.max(0, Math.min(1, -rect.top / vh))
+        if (bgs[i]) {
+          bgs[i].style.transform = `translateZ(0) translateY(${progress * 8}%)`
+        }
+
+        /* Text visible while card is on screen */
+        const onScreen = rect.top < vh * 0.9 && rect.bottom > 0
+        if (texts[i]) {
+          texts[i].classList.toggle('mbs__text--visible', onScreen)
+        }
+      })
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  const total = SLIDES.length
 
   return (
-    <section className="ms-wrapper" aria-label="Featured collection">
-      {SLIDES.map((slide, i) => (
-        <Slide
-          key={slide.slug || i}
-          slide={slide}
-          index={i}
-          total={SLIDES.length}
-        />
-      ))}
+    <section className="mbs__section" aria-label="Featured collection">
+      {SLIDES.map((slide, i) => {
+        const isLast = i === total - 1
+        return (
+          <div
+            key={slide.slug || i}
+            className="mbs__slide"
+            style={{
+              height:  isLast ? '100svh' : '200svh',
+              zIndex:  i + 1,
+            }}
+          >
+            <div className="mbs__pin">
+
+              {/* Background */}
+              <div
+                className="mbs__bg"
+                style={{
+                  backgroundImage:   slide.background ? `url(${slide.background})` : 'none',
+                  backgroundColor:  '#0f0d0a',
+                }}
+                role="img"
+                aria-label={slide.bgAlt || slide.altFallback || ''}
+              />
+
+              <div className="mbs__ov-top" aria-hidden="true" />
+              <div className="mbs__ov-bot" aria-hidden="true" />
+
+              {/* Portrait */}
+              <div className="mbs__portrait-wrap">
+                <img
+                  className="mbs__portrait"
+                  src={slide.img || ''}
+                  alt={slide.altFallback || ''}
+                  loading="eager"
+                  decoding="sync"
+                />
+              </div>
+
+              {/* Badge */}
+              <div className="mbs__badge" aria-hidden="true">
+                {String(i + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
+              </div>
+
+              {/* Text */}
+              <div className="mbs__text">
+                <span className="mbs__slug">{slide.slug || `chapter ${i + 1}`}</span>
+                <div className="mbs__rule" aria-hidden="true" />
+                <h2 className="mbs__title">{slide.altFallback || `Slide ${i + 1}`}</h2>
+                {slide.subKey && <p className="mbs__sub">{slide.subKey}</p>}
+              </div>
+
+            </div>
+          </div>
+        )
+      })}
     </section>
-  );
+  )
 }
