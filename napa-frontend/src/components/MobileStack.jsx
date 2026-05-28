@@ -1,279 +1,202 @@
-import { useRef, useEffect, useState } from "react";
-import { SLIDES } from "./ScrollSection";
+// MobileStack.jsx
+import { useEffect } from 'react'
+import { SLIDES } from './ScrollSection'
+
+const ID = 'mbs3'
 
 const CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Montserrat:wght@200;300;400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300;1,400&family=Montserrat:wght@200;300&display=swap');
 
-  :root {
-    --ease-silk: cubic-bezier(0.23, 1, 0.32, 1);
-    --gold:      #c9a96e;
-    --cream:     #f5f0e8;
-  }
+.mbs3 { display: none; }
 
-  /* ── Wrapper: clip horizontal overflow here at the top level only ── */
-  .ms-wrapper {
+@media (max-width: 767px) {
+  .mbs3 {
+    display: block;
     position: relative;
-    width: 100%;
-    overflow-x: clip;   /* clip (not hidden) — doesn't create a scroll container,
-                           so sticky children inside still work correctly */
-    overflow-y: visible;
   }
 
-  @media (min-width: 768px) {
-    .ms-wrapper { display: none; }
-  }
-
-  /*
-    Each slide is a tall scroll-container for its sticky child.
-    Height = 200vh for all except last (100vh) so the card
-    stays pinned long enough for the next to rise over it.
-
-    CRITICAL: NO overflow on .ms-slide — any overflow value
-    other than visible breaks position:sticky inside it.
-  */
-  .ms-slide {
-    position: relative;
-    /* height set via inline style */
-  }
-
-  /*
-    The sticky panel pins at top:0 and is always 100vh tall.
-    z-index increments per slide so each new card is visually
-    above the previous one — the natural scroll rise does the
-    "covering" effect without any JS or clip-path needed.
-  */
-  .ms-sticky {
+  .mbs3-slide {
     position: sticky;
     top: 0;
     height: 100vh;
     height: 100svh;
     width: 100%;
-    overflow: hidden;       /* safe here — clips bg bleed inside the sticky panel */
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  /* Background: vertical oversize only — NO horizontal bleed */
-  .ms-bg {
+  .mbs3-bg {
     position: absolute;
-    inset: -8% 0;           /* top/bottom oversize for parallax; left/right flush */
+    inset: 0;
     background-size: cover;
     background-position: center;
-    will-change: transform;
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
+    background-color: #0e0c09;
   }
 
-  .ms-overlay-top {
+  .mbs3-ov-top {
     position: absolute;
     inset: 0;
-    z-index: 1;
-    background: linear-gradient(to bottom, rgba(10,10,9,.40) 0%, transparent 30%);
+    background: linear-gradient(to bottom, rgba(5,3,1,.55) 0%, transparent 35%);
     pointer-events: none;
+    z-index: 1;
   }
-  .ms-overlay-bottom {
+  .mbs3-ov-bot {
     position: absolute;
     inset: 0;
-    z-index: 1;
-    background: linear-gradient(to top, rgba(10,10,9,.78) 0%, rgba(10,10,9,.12) 50%, transparent 72%);
+    background: linear-gradient(to top, rgba(5,3,1,.9) 0%, rgba(5,3,1,.1) 55%, transparent 72%);
     pointer-events: none;
+    z-index: 1;
   }
 
-  .ms-img-wrap {
+  .mbs3-portrait-wrap {
     position: absolute;
     inset: 0;
-    z-index: 2;
     display: flex;
     align-items: center;
     justify-content: center;
+    z-index: 2;
     pointer-events: none;
+    overflow: hidden;
   }
-  .ms-img {
+  .mbs3-portrait {
     display: block;
-    width: 66%;
-    max-width: 300px;
+    width: 62%;
+    max-width: 260px;
     aspect-ratio: 3 / 4;
     object-fit: cover;
     border-radius: 2px;
-    transform: translateY(-6%);
-    box-shadow: 0 36px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(201,169,110,.15);
+    transform: translateY(-5%);
+    box-shadow: 0 28px 64px rgba(0,0,0,.7), 0 0 0 1px rgba(201,169,110,.12);
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
   }
 
-  .ms-text {
+  .mbs3-badge {
     position: absolute;
-    bottom: 0; left: 0; right: 0;
+    bottom: 52px;
+    left: 24px;
     z-index: 3;
-    padding: 0 28px 54px;
-    text-align: center;
-    pointer-events: none;
-    opacity: 0;
-    transform: translateY(14px);
-    transition: opacity .7s var(--ease-silk), transform .7s var(--ease-silk);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 9px;
+    font-weight: 200;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: rgba(201,169,110,.6);
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
   }
-  .ms-text.visible { opacity: 1; transform: translateY(0); }
 
-  .ms-slide-num {
+  .mbs3-text {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 0 24px 52px;
+    text-align: center;
+    z-index: 3;
+  }
+  .mbs3-slug {
     display: block;
     font-family: 'Montserrat', sans-serif;
-    font-weight: 200; font-size: 10px;
-    letter-spacing: .32em; color: var(--gold);
-    text-transform: uppercase; margin-bottom: 12px;
+    font-size: 9px;
+    font-weight: 200;
+    letter-spacing: .3em;
+    text-transform: uppercase;
+    color: #c9a96e;
+    margin-bottom: 9px;
   }
-  .ms-rule {
-    display: block; width: 26px; height: 1px;
-    background: var(--gold); opacity: .5; margin: 0 auto 12px;
+  .mbs3-rule {
+    display: block;
+    width: 22px;
+    height: 1px;
+    background: #c9a96e;
+    opacity: .45;
+    margin: 0 auto 9px;
   }
-  .ms-title {
+  .mbs3-title {
     font-family: 'Cormorant Garamond', serif;
-    font-style: italic; font-weight: 300;
-    font-size: clamp(26px, 8.5vw, 38px);
-    line-height: 1.08; color: var(--cream);
-    letter-spacing: .01em; margin: 0 0 8px;
+    font-style: italic;
+    font-weight: 300;
+    font-size: clamp(22px, 7.5vw, 34px);
+    line-height: 1.1;
+    color: #f5f0e8;
+    letter-spacing: .01em;
+    margin: 0 0 5px;
+    user-select: none;
+    -webkit-user-select: none;
   }
-  .ms-sub {
+  .mbs3-sub {
     font-family: 'Montserrat', sans-serif;
-    font-weight: 200; font-size: 10px;
-    letter-spacing: .24em; color: rgba(245,240,232,.6);
+    font-size: 9px;
+    font-weight: 200;
+    letter-spacing: .2em;
     text-transform: uppercase;
+    color: rgba(245,240,232,.5);
+    user-select: none;
+    -webkit-user-select: none;
   }
-
-  .ms-badge {
-    position: absolute; top: 26px; right: 22px;
-    z-index: 3;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 200; font-size: 10px;
-    letter-spacing: .22em; color: rgba(201,169,110,.65);
-    text-transform: uppercase;
-  }
-`;
-
-function Slide({ slide, index, total }) {
-  const stickyRef = useRef(null);
-  const bgRef     = useRef(null);
-  const textRef   = useRef(null);
-  const rafRef    = useRef(null);
-  const [textVisible, setTextVisible] = useState(index === 0);
-
-  useEffect(() => {
-    const sticky = stickyRef.current;
-    const bg     = bgRef.current;
-    if (!sticky || !bg) return;
-
-    const onScroll = () => {
-      if (rafRef.current) return;
-      rafRef.current = requestAnimationFrame(() => {
-        rafRef.current = null;
-        const rect = sticky.getBoundingClientRect();
-        const vh   = window.innerHeight;
-
-        // How far this panel has scrolled past the top (0→1)
-        const progress = Math.max(0, Math.min(1, -rect.top / vh));
-
-        // Parallax: bg drifts up slightly as we scroll through
-        bg.style.transform = `translateZ(0) translateY(${progress * 8}%)`;
-
-        // Show text when panel is on screen
-        const onScreen = rect.top < vh * 0.88 && rect.bottom > 0;
-        setTextVisible(onScreen);
-      });
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, []);
-
-  const label = slide.altFallback || `Slide ${index + 1}`;
-  const sub   = slide.subKey      || "";
-  const alt   = slide.bgAlt       || label;
-
-  /*
-    Slot height:
-    - Slides 0…N-2: 200svh — the card is visible for 100svh then
-      the next card scrolls up over it during the second 100svh.
-    - Last slide: 100svh — nothing needs to scroll over it.
-  */
-  const isLast    = index === total - 1;
-  const slotHeight = isLast ? "100svh" : "200svh";
-
-  return (
-    <div
-      className="ms-slide"
-      style={{ height: slotHeight, zIndex: index + 1 }}
-    >
-      <div className="ms-sticky" ref={stickyRef}>
-
-        {/* Background */}
-        <div
-          className="ms-bg"
-          ref={bgRef}
-          role="img"
-          aria-label={alt}
-          style={{
-            backgroundImage:  slide.background ? `url(${slide.background})` : "none",
-            backgroundColor: "#1a1510",
-          }}
-        />
-
-        <div className="ms-overlay-top"    aria-hidden="true" />
-        <div className="ms-overlay-bottom" aria-hidden="true" />
-
-        {/* Foreground portrait */}
-        <div className="ms-img-wrap">
-          <img
-            className="ms-img"
-            src={slide.img || ""}
-            alt={alt}
-            loading="eager"
-            decoding="sync"
-          />
-        </div>
-
-        {/* Badge */}
-        <div className="ms-badge" aria-hidden="true">
-          {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
-        </div>
-
-        {/* Text */}
-        <div
-          className={`ms-text${textVisible ? " visible" : ""}`}
-          ref={textRef}
-        >
-          <span className="ms-slide-num">{slide.slug || `Chapter ${index + 1}`}</span>
-          <div className="ms-rule" aria-hidden="true" />
-          <h2 className="ms-title">{label}</h2>
-          {sub && <p className="ms-sub">{sub}</p>}
-        </div>
-
-      </div>
-    </div>
-  );
 }
+`
 
 export default function MobileStack() {
   useEffect(() => {
-    const id = "ms-styles-v5";
-    if (document.getElementById(id)) return;
-    const el = document.createElement("style");
-    el.id = id;
-    el.textContent = CSS;
-    document.head.appendChild(el);
-    return () => document.getElementById(id)?.remove();
-  }, []);
+    if (document.getElementById(ID)) return
+    const el = document.createElement('style')
+    el.id = ID
+    el.textContent = CSS
+    document.head.appendChild(el)
+    return () => document.getElementById(ID)?.remove()
+  }, [])
+
+  const total = SLIDES.length
 
   return (
-    <section className="ms-wrapper" aria-label="Featured collection">
-      {SLIDES.map((slide, i) => (
-        <Slide
-          key={slide.slug || i}
-          slide={slide}
-          index={i}
-          total={SLIDES.length}
-        />
-      ))}
-    </section>
-  );
+    <div className="mbs3" aria-label="Featured collection">
+      {SLIDES.map((slide, i) => {
+        // Use mobile-specific images if provided, fall back to desktop ones
+        const bgSrc  = slide.mobileBackground || slide.background
+        const imgSrc = slide.mobileImg        || slide.img
+
+        return (
+          <div
+            key={slide.slug || i}
+            className="mbs3-slide"
+            style={{ zIndex: i + 1 }}
+          >
+            <div
+              className="mbs3-bg"
+              style={{ backgroundImage: bgSrc ? `url(${bgSrc})` : 'none' }}
+            />
+
+            <div className="mbs3-ov-top" />
+            <div className="mbs3-ov-bot" />
+
+            <div className="mbs3-portrait-wrap">
+              <img
+                className="mbs3-portrait"
+                src={imgSrc || ''}
+                alt={slide.altFallback || ''}
+                loading="eager"
+                decoding="sync"
+                draggable="false"
+              />
+            </div>
+
+            <div className="mbs3-badge">
+              {String(i + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
+            </div>
+
+            <div className="mbs3-text">
+              <span className="mbs3-slug">{slide.slug || `chapter ${i + 1}`}</span>
+              <div className="mbs3-rule" />
+              <h2 className="mbs3-title">{slide.altFallback || `Slide ${i + 1}`}</h2>
+              {slide.subKey && <p className="mbs3-sub">{slide.subKey}</p>}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
 }
