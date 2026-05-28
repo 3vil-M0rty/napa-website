@@ -15,6 +15,14 @@ const CSS = `
     position: relative;
   }
 
+  /* NEW: outer wrapper owns the 100vh scroll slot */
+  .mbs3-slide-wrap {
+    height: 100vh;
+    height: 100svh;
+    position: relative;
+  }
+
+  /* Card is now sticky INSIDE its own 100vh wrapper */
   .mbs3-slide {
     position: sticky;
     top: 0;
@@ -155,44 +163,42 @@ export default function MobileStack() {
   return (
     <div className="mbs3" aria-label="Featured collection">
       {SLIDES.map((slide, i) => {
-        // Use mobile-specific images if provided, fall back to desktop ones
         const bgSrc  = slide.mobileBackground || slide.background
         const imgSrc = slide.mobileImg        || slide.img
 
         return (
+          // NEW: wrapper div owns the scroll slot, z-index lives here
           <div
             key={slide.slug || i}
-            className="mbs3-slide"
+            className="mbs3-slide-wrap"
             style={{ zIndex: i + 1 }}
           >
-            <div
-              className="mbs3-bg"
-              style={{ backgroundImage: bgSrc ? `url(${bgSrc})` : 'none' }}
-            />
-
-            <div className="mbs3-ov-top" />
-            <div className="mbs3-ov-bot" />
-
-            <div className="mbs3-portrait-wrap">
-              <img
-                className="mbs3-portrait"
-                src={imgSrc || ''}
-                alt={slide.altFallback || ''}
-                loading="eager"
-                decoding="sync"
-                draggable="false"
+            <div className="mbs3-slide">
+              <div
+                className="mbs3-bg"
+                style={{ backgroundImage: bgSrc ? `url(${bgSrc})` : 'none' }}
               />
-            </div>
-
-            <div className="mbs3-badge">
-              {String(i + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
-            </div>
-
-            <div className="mbs3-text">
-              <span className="mbs3-slug">{slide.slug || `chapter ${i + 1}`}</span>
-              <div className="mbs3-rule" />
-              <h2 className="mbs3-title">{slide.altFallback || `Slide ${i + 1}`}</h2>
-              {slide.subKey && <p className="mbs3-sub">{slide.subKey}</p>}
+              <div className="mbs3-ov-top" />
+              <div className="mbs3-ov-bot" />
+              <div className="mbs3-portrait-wrap">
+                <img
+                  className="mbs3-portrait"
+                  src={imgSrc || ''}
+                  alt={slide.altFallback || ''}
+                  loading="eager"
+                  decoding="sync"
+                  draggable="false"
+                />
+              </div>
+              <div className="mbs3-badge">
+                {String(i + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
+              </div>
+              <div className="mbs3-text">
+                <span className="mbs3-slug">{slide.slug || `chapter ${i + 1}`}</span>
+                <div className="mbs3-rule" />
+                <h2 className="mbs3-title">{slide.altFallback || `Slide ${i + 1}`}</h2>
+                {slide.subKey && <p className="mbs3-sub">{slide.subKey}</p>}
+              </div>
             </div>
           </div>
         )
