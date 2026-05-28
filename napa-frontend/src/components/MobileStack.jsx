@@ -15,6 +15,7 @@ const CSS = `
     position: relative;
   }
 
+  /* No parallax — pure sticky stack */
   .mbs3-slide {
     position: sticky;
     top: 0;
@@ -22,33 +23,16 @@ const CSS = `
     height: 100svh;
     width: 100%;
     overflow: hidden;
+    /* Kill blue tap highlight everywhere inside */
+    -webkit-tap-highlight-color: transparent;
   }
 
-  /*
-    Extra vertical room = more visible parallax travel.
-    -20%/+20% means the bg can shift 20% before clipping.
-  */
   .mbs3-bg {
     position: absolute;
-    top: -20%;
-    bottom: -20%;
-    left: 0;
-    right: 0;
+    inset: 0;
     background-size: cover;
     background-position: center;
     background-color: #0e0c09;
-    will-change: transform;
-  }
-
-  .mbs3-portrait-img {
-    position: absolute;
-    top: -15%;
-    bottom: -15%;
-    left: 0;
-    right: 0;
-    background-size: cover;
-    background-position: center top;
-    will-change: transform;
   }
 
   .mbs3-ov-top {
@@ -76,7 +60,6 @@ const CSS = `
     pointer-events: none;
     overflow: hidden;
   }
-  /* Portrait moves at a slower rate than bg = depth layering */
   .mbs3-portrait {
     display: block;
     width: 62%;
@@ -84,14 +67,19 @@ const CSS = `
     aspect-ratio: 3 / 4;
     object-fit: cover;
     border-radius: 2px;
-    will-change: transform;
+    transform: translateY(-5%);
     box-shadow: 0 28px 64px rgba(0,0,0,.7), 0 0 0 1px rgba(201,169,110,.12);
+    /* No blue highlight on image touch */
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
   }
 
+  /* Badge moved to bottom-left to avoid burger menu collision */
   .mbs3-badge {
     position: absolute;
-    top: 22px;
-    right: 18px;
+    bottom: 52px;
+    left: 24px;
     z-index: 3;
     font-family: 'Montserrat', sans-serif;
     font-size: 9px;
@@ -99,6 +87,9 @@ const CSS = `
     letter-spacing: .22em;
     text-transform: uppercase;
     color: rgba(201,169,110,.6);
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
   }
 
   .mbs3-text {
@@ -109,7 +100,6 @@ const CSS = `
     padding: 0 24px 52px;
     text-align: center;
     z-index: 3;
-    will-change: transform;
   }
   .mbs3-slug {
     display: block;
@@ -138,6 +128,8 @@ const CSS = `
     color: #f5f0e8;
     letter-spacing: .01em;
     margin: 0 0 5px;
+    user-select: none;
+    -webkit-user-select: none;
   }
   .mbs3-sub {
     font-family: 'Montserrat', sans-serif;
@@ -146,6 +138,8 @@ const CSS = `
     letter-spacing: .2em;
     text-transform: uppercase;
     color: rgba(245,240,232,.5);
+    user-select: none;
+    -webkit-user-select: none;
   }
 }
 `
@@ -160,58 +154,6 @@ export default function MobileStack() {
     return () => document.getElementById(ID)?.remove()
   }, [])
 
-  useEffect(() => {
-    const slides   = Array.from(document.querySelectorAll('.mbs3-slide'))
-    const bgs      = Array.from(document.querySelectorAll('.mbs3-bg'))
-    const portraits = Array.from(document.querySelectorAll('.mbs3-portrait'))
-    const texts    = Array.from(document.querySelectorAll('.mbs3-text'))
-    let raf = null
-
-    const tick = () => {
-      raf = null
-      const vh = window.innerHeight
-
-      slides.forEach((slide, i) => {
-        const rect = slide.getBoundingClientRect()
-
-        // progress: 0 when card enters top, 1 when card exits top
-        // rect.top goes from +vh (entering) to 0 (pinned) to -vh (exiting)
-        // We want: 0 when rect.top = 0 (fully pinned), drive from there
-        const raw = -rect.top / vh
-        const progress = Math.max(0, Math.min(1, raw))
-
-        // Background drifts up — largest travel = most dramatic parallax
-        // 20% oversize each side means we have 40% total travel budget
-        // Use 30% of that for a strong but not clipped effect
-        if (bgs[i]) {
-          const bgShift = progress * 30  // 0% → 30% upward drift
-          bgs[i].style.transform = `translateZ(0) translateY(-${bgShift}%)`
-        }
-
-        // Portrait moves at half the rate of the bg — creates depth separation
-        if (portraits[i]) {
-          const portraitShift = progress * 12
-          // Start centered (translateY(-5%) from CSS), drift up slowly
-          portraits[i].style.transform = `translateZ(0) translateY(calc(-5% - ${portraitShift}px))`
-        }
-
-        // Text drifts up at one-third rate — feels grounded
-        if (texts[i]) {
-          const textShift = progress * 18
-          texts[i].style.transform = `translateZ(0) translateY(-${textShift}px)`
-        }
-      })
-    }
-
-    const onScroll = () => { if (!raf) raf = requestAnimationFrame(tick) }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    tick()
-    return () => {
-      window.removeEventListener('scroll', onScroll)
-      if (raf) cancelAnimationFrame(raf)
-    }
-  }, [])
-
   const total = SLIDES.length
 
   return (
@@ -222,7 +164,6 @@ export default function MobileStack() {
           className="mbs3-slide"
           style={{ zIndex: i + 1 }}
         >
-          {/* Background — slowest layer */}
           <div
             className="mbs3-bg"
             style={{ backgroundImage: slide.background ? `url(${slide.background})` : 'none' }}
@@ -231,7 +172,6 @@ export default function MobileStack() {
           <div className="mbs3-ov-top" />
           <div className="mbs3-ov-bot" />
 
-          {/* Portrait — mid layer */}
           <div className="mbs3-portrait-wrap">
             <img
               className="mbs3-portrait"
@@ -239,14 +179,15 @@ export default function MobileStack() {
               alt={slide.altFallback || ''}
               loading="eager"
               decoding="sync"
+              draggable="false"
             />
           </div>
 
+          {/* Badge moved to bottom-left, clear of burger menu */}
           <div className="mbs3-badge">
             {String(i + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
           </div>
 
-          {/* Text — fastest layer (closest to viewer) */}
           <div className="mbs3-text">
             <span className="mbs3-slug">{slide.slug || `chapter ${i + 1}`}</span>
             <div className="mbs3-rule" />

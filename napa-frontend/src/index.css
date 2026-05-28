@@ -82,3 +82,14 @@ select {
   font-family: inherit;
   outline: none;
 }
+
+/* Add inside the <style> block in index.html — kills blue flash on ALL touch taps */
+*, *::before, *::after {
+  -webkit-tap-highlight-color: transparent;
+}
+/* Prevent callout menu on long-press for images and links */
+img, a, button {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}

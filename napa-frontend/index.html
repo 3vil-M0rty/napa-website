@@ -5,46 +5,122 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <style>
-      html, body {
-        margin: 0;
-        padding: 0;
-        background: linear-gradient(160deg, #8b1d1f 0%, #cc5355 45%, #ebb3b3 100%);
-      }
+      html, body { margin: 0; padding: 0; background: linear-gradient(160deg, #8b1d1f 0%, #cc5355 45%, #ebb3b3 100%); }
       #root { min-height: 100vh; }
+      *, *::before, *::after { -webkit-tap-highlight-color: transparent; }
+      img, a, button { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
     </style>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/napaco.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preload" href="/models/bottle.glb" as="fetch" crossorigin />
 
-    <title>NAPA Chapter One — Wine & Cocktail Bar in Gueliz, Marrakech</title>
+    <title>NAPA Chapter One — Wine & Cocktail Bar, Gueliz Marrakech</title>
 
-    <meta name="description" content="NAPA Chapter One is an intimate Art Deco wine and cocktail bar in Gueliz, Marrakech. Natural and organic wines, farm-to-bar cocktails with Moroccan botanicals, and sharing plates. Open Tue–Sat from 5pm." />
+    <!-- ─── SEO ── max ~155 chars for description ──────────────────────── -->
+    <meta name="description" content="Intimate Art Deco wine and cocktail bar in Gueliz, Marrakech. Natural wines, farm-to-bar cocktails, sharing plates. Open Tue–Sat from 5pm." />
+    <meta name="keywords" content="wine bar Marrakech, cocktail bar Gueliz, natural wine Marrakech, NAPA Chapter One, Sanctuary Slimane, bar Marrakech 2026" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="theme-color" content="#8b1d1f" />
     <link rel="canonical" href="https://napachapterone.com/" />
 
+    <!-- Open Graph -->
     <meta property="og:type"        content="website" />
     <meta property="og:site_name"   content="NAPA Chapter One" />
     <meta property="og:title"       content="NAPA Chapter One — Wine & Cocktail Bar, Gueliz Marrakech" />
-    <meta property="og:description" content="An intimate Art Deco buvette in Gueliz. Natural wines, farm-to-bar cocktails, and small plates. A project by the team behind Farmers Marrakech." />
+    <meta property="og:description" content="Intimate Art Deco wine and cocktail bar in Gueliz, Marrakech. Natural wines, farm-to-bar cocktails, sharing plates. Open Tue–Sat from 5pm." />
     <meta property="og:image"       content="https://napachapterone.com/og-image.jpg" />
     <meta property="og:image:alt"   content="NAPA Chapter One — Art Deco wine and cocktail bar, Gueliz, Marrakech" />
     <meta property="og:url"         content="https://napachapterone.com/" />
 
+    <!-- Twitter Card -->
     <meta name="twitter:card"        content="summary_large_image" />
     <meta name="twitter:title"       content="NAPA Chapter One — Wine & Cocktail Bar, Gueliz Marrakech" />
-    <meta name="twitter:description" content="Natural wines, farm-to-bar cocktails, and small plates in an intimate Art Deco room. Gueliz, Marrakech. Open Tue–Sat from 5pm." />
+    <meta name="twitter:description" content="Intimate Art Deco wine and cocktail bar in Gueliz, Marrakech. Natural wines, farm-to-bar cocktails, sharing plates. Open Tue–Sat from 5pm." />
     <meta name="twitter:image"       content="https://napachapterone.com/og-image.jpg" />
     <meta name="twitter:image:alt"   content="NAPA Chapter One — wine and cocktail bar, Marrakech" />
 
+    <!-- Geo -->
     <meta name="geo.region"    content="MA-09" />
     <meta name="geo.placename" content="Marrakech, Morocco" />
     <meta name="geo.position"  content="31.6351689;-8.0152064" />
     <meta name="ICBM"          content="31.6351689, -8.0152064" />
+
+    <!-- JSON-LD structured data for crawlers that don't execute JS -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BarOrPub",
+      "name": "NAPA Chapter One",
+      "description": "Intimate Art Deco wine and cocktail bar in Gueliz, Marrakech. Natural wines, farm-to-bar cocktails with Moroccan botanicals, sharing plates.",
+      "url": "https://napachapterone.com",
+      "telephone": "+212524423022",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Gueliz",
+        "addressLocality": "Marrakech",
+        "addressCountry": "MA"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": "31.6351689",
+        "longitude": "-8.0152064"
+      },
+      "openingHoursSpecification": [
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": ["Tuesday","Wednesday","Thursday","Friday","Saturday"],
+          "opens": "17:00",
+          "closes": "01:00"
+        }
+      ],
+      "servesCuisine": ["Wine Bar","Cocktail Bar","Small Plates","Natural Wine"],
+      "priceRange": "$$",
+      "image": "https://napachapterone.com/og-image.jpg"
+    }
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!--
+        Static fallback for crawlers that don't execute JavaScript.
+        This content is immediately replaced by React on load.
+      -->
+      <noscript>
+        <main>
+          <h1>NAPA Chapter One — Wine &amp; Cocktail Bar, Gueliz Marrakech</h1>
+          <p>
+            NAPA Chapter One is an intimate Art Deco wine and cocktail bar located in Gueliz, Marrakech, Morocco.
+            Founded in 2026 by Aziz Nahas, Benjamin Pastor, and Simone Mérette — the team behind Farmers Marrakech —
+            NAPA Chapter One offers a carefully curated selection of natural, organic, and biodynamic wines from producers
+            around the world, alongside farm-to-bar cocktails crafted with Moroccan botanicals and ingredients
+            sourced directly from Sanctuary Slimane, a permaculture farm on the outskirts of Marrakech.
+          </p>
+          <p>
+            The bar features a restored Art Deco room with a curved counter, channel-tufted banquettes,
+            vintage lighting, and hand-commissioned furniture. Small plates and sharing dishes are developed
+            in collaboration with the kitchen at Farmers, the sister restaurant.
+          </p>
+          <p>
+            Open Tuesday to Saturday from 5pm to 1am. Thursday evenings feature resident DJ sets
+            across funk, hip hop, and soul. Located in Gueliz, Marrakech.
+          </p>
+          <address>
+            Gueliz, Marrakech, Morocco<br/>
+            Tel: +212 524 423 022<br/>
+            Hours: Tue–Sat 17:00–01:00
+          </address>
+          <nav>
+            <a href="/reserve">Reserve a Table</a>
+          </nav>
+        </main>
+      </noscript>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

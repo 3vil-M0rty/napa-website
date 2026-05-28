@@ -28,7 +28,7 @@ const STRUCTURED_DATA = {
       },
       geo: { '@type': 'GeoCoordinates', latitude: '31.6351689', longitude: '-8.0152064' },
       openingHoursSpecification: [
-        { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Tuesday','Wednesday','Thursday','Friday','Saturday'], opens: '17:00', closes: '01:00' },
+        { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], opens: '17:00', closes: '01:00' },
       ],
       servesCuisine: ['Wine Bar', 'Cocktail Bar', 'Small Plates', 'Natural Wine'],
       priceRange: '$$',
@@ -66,17 +66,17 @@ function HDRBackground() {
     scene.background = tex
 
     const envTex = tex.clone()
-    envTex.mapping    = THREE.EquirectangularReflectionMapping
+    envTex.mapping = THREE.EquirectangularReflectionMapping
     envTex.colorSpace = THREE.SRGBColorSpace
     envTex.needsUpdate = true
-    const pmrem  = new THREE.PMREMGenerator(gl)
+    const pmrem = new THREE.PMREMGenerator(gl)
     pmrem.compileEquirectangularShader()
     scene.environment = pmrem.fromEquirectangular(envTex).texture
     pmrem.dispose()
     envTex.dispose()
 
     return () => {
-      scene.background  = null
+      scene.background = null
       scene.environment = null
     }
   }, [tex, scene, gl])
@@ -120,26 +120,38 @@ function BottleModel({ scrollProgress }) {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [scrollProgress])
 
+  // Replace the useFrame inside BottleModel in HeroPage.jsx
+  // Touch: float animation + scroll zoom restored, still no rotation
+
   useFrame((state) => {
     if (!group.current) return
     const elapsed = state.clock.elapsedTime
     const sp = scrollProgress.current
 
     if (isTouch.current) {
-      const floatY  = Math.sin(elapsed * 0.5) * 0.22
-      const swayX   = Math.sin(elapsed * 0.31 + 1.2) * 0.06
+      // Float — no rotation
+      const floatY = Math.sin(elapsed * 0.5) * 0.22
+      const swayX = Math.sin(elapsed * 0.31 + 1.2) * 0.06
       const breathe = Math.sin(elapsed * 0.7 + 0.5) * 0.03
       group.current.position.x += (swayX - group.current.position.x) * 0.03
-      group.current.position.y  = -0.5 + floatY
+      group.current.position.y = -0.5 + floatY + sp * 0.6
       group.current.position.z += (breathe - group.current.position.z) * 0.03
       group.current.rotation.x = 0
       group.current.rotation.y = 0
       group.current.rotation.z = 0
-      group.current.scale.set(1, 1, 1)
+
+      // Scroll zoom — same as desktop
+      const targetZ = sp * 100
+      group.current.position.z += (targetZ - group.current.position.z) * 0.06
+      const targetScale = 1 + sp * 16
+      group.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.06)
+
     } else {
+      // Desktop — full original behaviour
       const bobAmp = 0.09 * (1 - sp * 0.8)
-      const baseY  = -0.5 + Math.sin(elapsed * 0.9) * bobAmp
+      const baseY = -0.5 + Math.sin(elapsed * 0.9) * bobAmp
       group.current.position.y = baseY + sp * 0.6
+
       if (sp < 0.5) {
         if (isVisible.current) {
           const targetY = state.mouse.x * Math.PI * 0.18
@@ -150,18 +162,18 @@ function BottleModel({ scrollProgress }) {
           frozenRotX.current = group.current.rotation.x
         }
       } else {
-        const t2   = (sp - 0.5) / 0.5
+        const t2 = (sp - 0.5) / 0.5
         const ease = t2 * t2 * (3 - 2 * t2)
         group.current.rotation.y = frozenRotY.current + (labelRotY.current - frozenRotY.current) * ease
         group.current.rotation.x = frozenRotX.current * (1 - ease)
       }
+
       const targetZ = sp * 100
       group.current.position.z += (targetZ - group.current.position.z) * 0.06
       const targetScale = 1 + sp * 16
       group.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.06)
     }
   })
-
   return (
     <group ref={group}>
       <primitive object={model.scene} scale={18} position={[0, -1, 0]} />
@@ -222,11 +234,11 @@ function Vignette() {
 function HeroOverlay() {
   const { t } = useTranslation()
   const fontSerif = "'Cormorant Garamond', 'Cormorant', Georgia, 'Times New Roman', serif"
-  const fontSans  = "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif"
-  const wineRed   = '#8b1d1f'
-  const cream     = '#faf6ef'
-  const creamy60  = 'rgba(250,246,239,0.6)'
-  const creamy45  = 'rgba(250,246,239,0.45)'
+  const fontSans = "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+  const wineRed = '#8b1d1f'
+  const cream = '#faf6ef'
+  const creamy60 = 'rgba(250,246,239,0.6)'
+  const creamy45 = 'rgba(250,246,239,0.45)'
 
   const [isMobile, setIsMobile] = useState(
     typeof window !== 'undefined' ? window.innerWidth < 640 : false
@@ -262,7 +274,7 @@ function HeroOverlay() {
           maxWidth: isMobile ? '100%' : '380px',
           textShadow: '0 1px 12px rgba(0,0,0,0.5)',
         }}>
-          {t('hero.taglinePre')}<br/>
+          {t('hero.taglinePre')}<br />
           {t('hero.taglinePost')}
         </h1>
 
@@ -374,9 +386,9 @@ function HeroOverlay() {
 
 export default function HeroPage() {
   const scrollProgress = useRef(0)
-  const { t, i18n }   = useTranslation()
-  const lang           = i18n.language === 'fr' ? 'fr' : 'en'
-  const isTouch        = useRef('ontouchstart' in window || navigator.maxTouchPoints > 0)
+  const { t, i18n } = useTranslation()
+  const lang = i18n.language === 'fr' ? 'fr' : 'en'
+  const isTouch = useRef('ontouchstart' in window || navigator.maxTouchPoints > 0)
 
   return (
     <>
@@ -384,29 +396,29 @@ export default function HeroPage() {
         <html lang={lang} />
         <title>{t('seo.title')}</title>
         <meta name="description" content={t('seo.description')} />
-        <meta name="keywords"    content={t('seo.keywords')} />
-        <link rel="canonical"    href="https://napachapterone.com/" />
-        <meta property="og:type"        content="website" />
-        <meta property="og:site_name"   content="NAPA Chapter One" />
-        <meta property="og:title"       content={t('seo.ogTitle')} />
+        <meta name="keywords" content={t('seo.keywords')} />
+        <link rel="canonical" href="https://napachapterone.com/" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="NAPA Chapter One" />
+        <meta property="og:title" content={t('seo.ogTitle')} />
         <meta property="og:description" content={t('seo.ogDescription')} />
-        <meta property="og:image"       content="https://napachapterone.com/og-image.jpg" />
-        <meta property="og:image:alt"   content={t('seo.ogImageAlt')} />
-        <meta property="og:url"         content="https://napachapterone.com/" />
-        <meta property="og:locale"      content={lang === 'fr' ? 'fr_FR' : 'en_US'} />
+        <meta property="og:image" content="https://napachapterone.com/og-image.jpg" />
+        <meta property="og:image:alt" content={t('seo.ogImageAlt')} />
+        <meta property="og:url" content="https://napachapterone.com/" />
+        <meta property="og:locale" content={lang === 'fr' ? 'fr_FR' : 'en_US'} />
         <meta property="og:locale:alternate" content={lang === 'fr' ? 'en_US' : 'fr_FR'} />
-        <meta name="twitter:card"        content="summary_large_image" />
-        <meta name="twitter:title"       content={t('seo.ogTitle')} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={t('seo.ogTitle')} />
         <meta name="twitter:description" content={t('seo.ogDescription')} />
-        <meta name="twitter:image"       content="https://napachapterone.com/og-image.jpg" />
-        <meta name="twitter:image:alt"   content={t('seo.ogImageAlt')} />
-        <meta name="geo.region"    content="MA-09" />
+        <meta name="twitter:image" content="https://napachapterone.com/og-image.jpg" />
+        <meta name="twitter:image:alt" content={t('seo.ogImageAlt')} />
+        <meta name="geo.region" content="MA-09" />
         <meta name="geo.placename" content="Marrakech, Morocco" />
-        <meta name="geo.position"  content="31.6351689;-8.0152064" />
-        <meta name="ICBM"          content="31.6351689, -8.0152064" />
-        <meta name="robots"        content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
-        <meta name="author"        content="NAPA Chapter One" />
-        <meta name="theme-color"   content="#A11C24" />
+        <meta name="geo.position" content="31.6351689;-8.0152064" />
+        <meta name="ICBM" content="31.6351689, -8.0152064" />
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+        <meta name="author" content="NAPA Chapter One" />
+        <meta name="theme-color" content="#A11C24" />
         <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
         <script type="application/ld+json">{JSON.stringify(STRUCTURED_DATA)}</script>
       </Helmet>
@@ -438,7 +450,7 @@ export default function HeroPage() {
                 shadow-camera-top={8} shadow-camera-bottom={-8}
                 shadow-bias={-0.0004} shadow-radius={6}
               />
-              <directionalLight position={[5, 2, 4]}   intensity={0.8} color="#ffb870" castShadow={false} />
+              <directionalLight position={[5, 2, 4]} intensity={0.8} color="#ffb870" castShadow={false} />
               <directionalLight position={[-5, 6, -8]} intensity={1.4} color="#7baeff" castShadow={false} />
               <CursorLight />
               <BottleModel scrollProgress={scrollProgress} />
