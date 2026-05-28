@@ -44,16 +44,41 @@ const STRUCTURED_DATA = {
 const HDR_ROTATION_OFFSET = 0
 const MOUSE_PARALLAX = 0.06
 
+// Drop-in replacement for HDRBackground in HeroPage.jsx
+// Swaps the 26MB scene.hdr for /images/a1.webp (~100KB)
+// Remove the useEnvironment import from @react-three/drei if nothing else uses it.
+
 function HDRBackground() {
-  const { scene } = useThree()
-  const hdr = useEnvironment({ files: '/scene.hdr' })
-  const sphereRef = useRef()
+  const { scene, gl } = useThree()
+  const sphereRef     = useRef()
+  const texRef        = useRef(null)
 
   useEffect(() => {
-    if (!hdr) return
-    scene.environment = hdr
-    return () => { scene.environment = null }
-  }, [hdr, scene])
+    const loader = new THREE.TextureLoader()
+    loader.load('/images/a1.webp', (tex) => {
+      tex.mapping    = THREE.EquirectangularReflectionMapping
+      tex.colorSpace = THREE.SRGBColorSpace
+
+      // Set as scene background sphere texture
+      texRef.current = tex
+      if (sphereRef.current) {
+        sphereRef.current.material.map = tex
+        sphereRef.current.material.needsUpdate = true
+      }
+
+      // Also generate env map for bottle reflections
+      const pmrem  = new THREE.PMREMGenerator(gl)
+      pmrem.compileEquirectangularShader()
+      const envMap = pmrem.fromEquirectangular(tex).texture
+      scene.environment = envMap
+      pmrem.dispose()
+    })
+
+    return () => {
+      scene.environment = null
+      texRef.current?.dispose()
+    }
+  }, [scene, gl])
 
   useFrame((state) => {
     if (!sphereRef.current) return
@@ -63,11 +88,10 @@ function HDRBackground() {
     sphereRef.current.rotation.x += (targetX - sphereRef.current.rotation.x) * 0.04
   })
 
-  if (!hdr) return null
   return (
     <mesh ref={sphereRef} scale={[-1, 1, 1]}>
       <sphereGeometry args={[400, 60, 40]} />
-      <meshBasicMaterial map={hdr} side={THREE.BackSide} />
+      <meshBasicMaterial />
     </mesh>
   )
 }
