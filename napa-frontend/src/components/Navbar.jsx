@@ -219,7 +219,7 @@ export default function Navbar() {
       if (isFooterActive) {
         gsap.to(logoRef.current, {
           position: 'fixed',
-          bottom: '1rem',
+          bottom: '1.5rem',
           top: 'auto',
           scale: 1,
           duration: 0.7,
@@ -230,8 +230,8 @@ export default function Navbar() {
       } else {
         gsap.to(logoRef.current, {
           position: 'fixed',
-          top: isMobile ? '0.6rem' : '0.75rem',
-          left: isMobile ? '1rem' : '1.5rem',
+          top: isMobile ? '0.6rem' : '1.5rem',
+          left: isMobile ? '0.6rem' : '1.5rem',
           scale: 1,
           duration: 0.8,
           ease: "power3.out",
@@ -286,16 +286,16 @@ export default function Navbar() {
         to="/"
         style={{
           position: 'fixed',
-          top: isMobile ? '0.6rem' : '0.75rem',
-          left: isMobile ? '1rem' : '1.5rem',
+          top: isMobile ? '0.6rem' : '1.5rem',
+          left: isMobile ? '0.6rem' : '1.5rem',
           zIndex: 102,
           textDecoration: 'none',
         }}
       >
         <div ref={logoRef} style={{
           position: 'fixed',
-          top: isMobile ? '0.6rem' : '0.75rem',
-          left: isMobile ? '1rem' : '1.5rem',
+          top: isMobile ? '0.6rem' : '1.5rem',
+          left: isMobile ? '0.6rem' : '1.5rem',
           scale: 1,
           color: 'white',
         }}>

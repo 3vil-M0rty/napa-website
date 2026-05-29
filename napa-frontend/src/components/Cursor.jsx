@@ -24,7 +24,7 @@ const CURSOR_STYLE = `
     transition: width 0.2s ease, height 0.2s ease;
   }
 
-  .cursor-dot.active     { width: 16px; height: 16px; }
+  .cursor-dot.active      { width: 16px; height: 16px; }
   .cursor-dot.model-hover { width: 28px; height: 28px; }
 
   .cursor-ring {
@@ -47,21 +47,22 @@ const CURSOR_STYLE = `
   .cursor-ring.model-hover { width: 64px; height: 64px; opacity: 0.6; }
 `
 
-// Detect touch synchronously so the very first render is correct.
-// Using useState(false) causes a flash where cursor divs render before
-// the useEffect touch-check fires — visible in DevTools mobile emulation.
-const IS_TOUCH = typeof window !== 'undefined'
-  && ('ontouchstart' in window || navigator.maxTouchPoints > 0)
+// pointer:fine = mouse/trackpad = show custom cursor.
+// The old ontouchstart / maxTouchPoints check fires true on any touchscreen
+// laptop or when Chrome DevTools touch emulation is on, hiding the cursor
+// on desktop dev machines. matchMedia('pointer:fine') is the correct signal.
+const IS_DESKTOP =
+  typeof window !== 'undefined' &&
+  window.matchMedia('(pointer: fine)').matches
 
 export default function Cursor({ isModelHovered = false }) {
-  const dotRef      = useRef()
-  const ringRef     = useRef()
-  const ringTween   = useRef(null)
+  const dotRef    = useRef()
+  const ringRef   = useRef()
+  const ringTween = useRef(null)
   const [isClickable, setIsClickable] = useState(false)
 
   useEffect(() => {
-    // Don't attach anything on touch devices
-    if (IS_TOUCH) return
+    if (!IS_DESKTOP) return
 
     const style = document.createElement('style')
     style.innerHTML = CURSOR_STYLE
@@ -90,8 +91,7 @@ export default function Cursor({ isModelHovered = false }) {
     }
   }, [])
 
-  // Bail out on first render for touch — no divs painted at all
-  if (IS_TOUCH) return null
+  if (!IS_DESKTOP) return null
 
   const state = isModelHovered ? 'model-hover' : isClickable ? 'active' : ''
 

@@ -1,29 +1,3 @@
-// MobileStack.jsx — DEFINITIVE FIX v2
-//
-// CHANGES FROM PREVIOUS VERSION:
-// The previous version tried to fix the upward scroll trap by:
-//   1. Detecting scroll direction change
-//   2. Snapping to a slide boundary
-//   3. Switching slides to position:relative
-//
-// That approach had a race condition: by the time the 'scroll' event fires,
-// the browser has already committed momentum to the scroll context. The snap
-// might fire 1-3 frames late, causing a visible jump or not firing at all
-// because the direction-change detection missed the first delta.
-//
-// THE REAL FIX IS IN HeroPage.jsx (canvas pointer-events:none on mobile).
-// That fix eliminates the PRIMARY scroll trap. This file now uses a simpler,
-// more reliable version of the direction fix as a secondary safeguard.
-//
-// SIMPLIFIED APPROACH:
-// Instead of snapping on direction change, we use a passive scroll listener
-// that switches position:relative only when scrollY < heroH + vh (i.e., when
-// we're at or near slide 1 heading back toward the hero). This is a pure
-// CSS class toggle with no snap — no visible jump, no race condition.
-// Going DOWN: sticky stacking works as before (class absent).
-// Going UP from slide 1: position:relative kicks in as soon as we detect
-// upward direction, so the hero section scrolls normally into view.
-
 import { useEffect, useRef } from 'react'
 import { SLIDES } from './ScrollSection'
 
@@ -34,7 +8,7 @@ const CSS = `
 
 .mbs3 { display: none; }
 
-@media (max-width: 767px) {
+@media (pointer: coarse) {
   .mbs3 {
     display: block;
     position: relative;
@@ -51,23 +25,12 @@ const CSS = `
     touch-action: pan-y;
   }
 
-  /*
-   * When scrolling UP, disable sticky on all slides so upward momentum
-   * passes through cleanly. Slides fall back to normal document flow.
-   * At the moment this class is added, scrollY has been snapped to a
-   * slide boundary, so each slide's natural position === its sticky
-   * position → zero visual jump.
-   */
-  .mbs3--scrolling-up .mbs3-slide {
-    position: relative !important;
-  }
-
   .mbs3-bg {
     position: absolute;
     inset: 0;
     background-size: cover;
     background-position: center;
-    background-color: #0e0c09;
+    background-color: #0a0a0a;
   }
 
   .mbs3-ov-top {
@@ -158,7 +121,7 @@ const CSS = `
     font-weight: 300;
     font-size: clamp(22px, 7.5vw, 34px);
     line-height: 1.1;
-    color: #f5f0e8;
+    color: #faf6ef;
     letter-spacing: .01em;
     margin: 0 0 5px;
     user-select: none;
@@ -190,68 +153,51 @@ export default function MobileStack() {
     return () => document.getElementById(ID)?.remove()
   }, [])
 
-  // ─── Scroll-direction fix ────────────────────────────────────────────────
+  // ─── Z-index management ──────────────────────────────────────────────────
   useEffect(() => {
-    // Only apply on actual touch devices
-    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0
-    if (!isTouch) return
-
     const wrap = wrapRef.current
     if (!wrap) return
 
-    const vh         = () => window.innerHeight
-    const heroH      = () => vh()                        // hero is exactly 100vh
-    const slideCount = SLIDES.length
+    const slides = wrap.querySelectorAll('.mbs3-slide')
+    const total  = slides.length
 
-    let lastScrollY  = window.scrollY
-    let ticking      = false
+    function updateZIndex() {
+      const y = window.scrollY
+      const wrapTop    = wrap.offsetTop
+      const wrapBottom = wrapTop + wrap.offsetHeight
+      const vh         = window.innerHeight
 
-    function applyDirection() {
-      const y    = window.scrollY
-      const hero = heroH()
-      const mbs3End = hero + slideCount * vh()
-
-      // Are we scrolling upward?
-      const goingUp = y < lastScrollY
-
-      if (goingUp && y >= hero - 10 && y <= mbs3End) {
-        // Scrolling up inside (or just leaving) the mbs3 zone.
-        // Switch slides to relative so momentum scrolls through cleanly.
-        if (!wrap.classList.contains('mbs3--scrolling-up')) {
-          // Snap to nearest slide boundary before switching to relative,
-          // so there's no visual jump (natural pos === sticky pos).
-          const relY       = Math.max(0, y - hero)
-          const slideIndex = Math.floor(relY / vh())
-          const snapTarget = hero + slideIndex * vh()
-
-          if (Math.abs(y - snapTarget) > 4) {
-            // Use instant scroll — imperceptible, same direction as gesture
-            window.scrollTo({ top: snapTarget, behavior: 'instant' })
-          }
-          wrap.classList.add('mbs3--scrolling-up')
-        }
-      } else if (!goingUp) {
-        // Scrolling down — restore sticky stacking
-        wrap.classList.remove('mbs3--scrolling-up')
+      // ── Only manage z-index while scroll is within the MobileStack zone.
+      // Once the user scrolls past the last slide (into ImageGallery),
+      // lock all slides at their final stacked state and do nothing more.
+      // This prevents the listener from interfering with sections below.
+      if (y < wrapTop) {
+        // Above MobileStack — reset to natural order
+        slides.forEach((slide, i) => { slide.style.zIndex = String(i) })
+        return
       }
 
-      lastScrollY = y
-      ticking = false
-    }
-
-    function onScroll() {
-      if (!ticking) {
-        // Use rAF to batch — fires before next paint, same frame as scroll
-        requestAnimationFrame(applyDirection)
-        ticking = true
+      if (y >= wrapBottom - vh) {
+        // At or past the end of MobileStack — lock all slides as fully stacked
+        slides.forEach((slide, i) => { slide.style.zIndex = String(total + i) })
+        return
       }
+
+      // Inside MobileStack — calculate which slide we're on
+      const relY    = y - wrapTop
+      const current = Math.min(Math.floor(relY / vh), total - 1)
+
+      slides.forEach((slide, i) => {
+        slide.style.zIndex = i <= current
+          ? String(total + i)   // on top: stacked
+          : String(i)           // below: natural order
+      })
     }
 
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => {
-      window.removeEventListener('scroll', onScroll)
-      wrap.classList.remove('mbs3--scrolling-up')
-    }
+    window.addEventListener('scroll', updateZIndex, { passive: true })
+    updateZIndex() // init on mount
+
+    return () => window.removeEventListener('scroll', updateZIndex)
   }, [])
 
   // ────────────────────────────────────────────────────────────────────────
@@ -267,7 +213,6 @@ export default function MobileStack() {
           <div
             key={slide.slug || i}
             className="mbs3-slide"
-            style={{ zIndex: i + 1 }}
           >
             <div
               className="mbs3-bg"

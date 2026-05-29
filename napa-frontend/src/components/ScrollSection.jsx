@@ -1,6 +1,6 @@
 // src/components/ScrollSection.jsx
 // Desktop: original GSAP sticky-track clip-path animation (untouched)
-// Mobile:  sticky card-stack — each card sticks at top while the next scrolls over it
+// Mobile:  hidden via CSS — MobileStack handles mobile presentation
 
 import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -10,10 +10,6 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 gsap.registerPlugin(ScrollTrigger)
 
 /* ─── SLIDE DATA ─────────────────────────────────────────────────────────── */
-// Replace the SLIDES array in ScrollSection.jsx with this.
-// Added: mobileBackground and mobileImg fields for phone-specific images.
-// Desktop uses background/img as before — untouched.
-
 export const SLIDES = [
   {
     background:       '/images/a1.webp',
@@ -63,31 +59,14 @@ export const SLIDES = [
     bgAlt:            'Sanctuary Slimane farm',
     slug:             'farm-to-table',
   },
-  /* {
-    background:       '/images/chef.webp',
-    mobileBackground: '/images/chef.webp',
-    titleKey:         'experience.slides.four.title',
-    subKey:           'experience.slides.four.sub',
-    img:              '/images/chef.webp',
-    mobileImg:        '/images/chef.webp',
-    altKey:           'experience.slides.four.imgAlt',
-    altFallback:      'Art Deco bar with terracotta tones and curved counter at NAPA Chapter One',
-    bgAlt:            'NAPA Chapter One Art Deco interior',
-    slug:             'art-deco-interior',
-  },
-  {
-    background:       '/images/chef.webp',
-    mobileBackground: '/images/chef.webp',
-    titleKey:         'experience.slides.five.title',
-    subKey:           'experience.slides.five.sub',
-    img:              '/images/chef.webp',
-    mobileImg:        '/images/chef.webp',
-    altKey:           'experience.slides.five.imgAlt',
-    altFallback:      'Late-night wine listening sessions and aperitivo at NAPA Chapter One',
-    bgAlt:            'NAPA Chapter One evening ambiance',
-    slug:             'late-night-sessions',
-  }, */
 ]
+
+/* ─── Desktop detection ──────────────────────────────────────────────────── */
+// pointer:fine = mouse = desktop. Replaces the old window.innerWidth < 768
+// check which breaks on large tablets and touch-enabled laptops in dev.
+const IS_DESKTOP =
+  typeof window !== 'undefined' &&
+  window.matchMedia('(pointer: fine)').matches
 
 /* ─── JSON-LD ────────────────────────────────────────────────────────────── */
 function ExperienceSchema({ slides, t }) {
@@ -193,7 +172,7 @@ const css = `
     font-weight: 500;
     letter-spacing: 0.28em;
     text-transform: uppercase;
-    color: #A11C24;
+    color: #8b1d1f;
     margin-bottom: 1.1rem;
   }
 
@@ -201,7 +180,7 @@ const css = `
     display: block;
     width: 32px;
     height: 1px;
-    background: #A11C24;
+    background: #8b1d1f;
     margin-bottom: 1.1rem;
   }
 
@@ -273,9 +252,10 @@ const css = `
     clip: rect(0 0 0 0);
     white-space: nowrap;
   }
-    @media (max-width: 767px) {
-  .ss-wrap { display: none !important; }
-}
+
+  /* Hide desktop scroll section on mobile — MobileStack takes over */
+  @media (pointer: coarse) {
+    .ss-wrap { display: none !important; }
   }
 `
 
@@ -288,17 +268,16 @@ export default function ScrollSection() {
     const wrap = wrapRef.current
     if (!wrap) return
 
-    const isMobile = window.innerWidth < 768
-    if (isMobile) return  // mobile is pure CSS sticky, zero JS needed
+    // Skip GSAP entirely on touch/mobile — section is hidden via CSS anyway
+    if (!IS_DESKTOP) return
 
-    /* DESKTOP — original GSAP sticky-track animation, untouched */
     const triggers = wrap.querySelectorAll('.ss-trigger')
-    const items = wrap.querySelectorAll('.ss-item')
+    const items    = wrap.querySelectorAll('.ss-item')
 
     const ctx = gsap.context(() => {
       triggers.forEach((trigger, i) => {
-        const bg = trigger.querySelector('.ss-bg')
-        const item = items[i]
+        const bg       = trigger.querySelector('.ss-bg')
+        const item     = items[i]
         if (!item) return
         const shapeImg = item.querySelector('.ss-img-shape img')
 
@@ -366,9 +345,6 @@ export default function ScrollSection() {
         <meta itemProp="numberOfItems" content={String(SLIDES.length)} />
         <meta itemProp="url" content="https://napachapterone.com/#experience" />
 
-        {/* ═══════════════════════════════════════
-            DESKTOP — backgrounds + sticky track
-        ═══════════════════════════════════════ */}
         <div style={{ position: 'relative' }} aria-hidden="true">
           {SLIDES.map((s, i) => (
             <div key={i} className="ss-trigger" id={`experience-${s.slug}`}>
@@ -419,15 +395,6 @@ export default function ScrollSection() {
             </div>
           </div>
         </div>
-
-        {/* ═══════════════════════════════════════
-            MOBILE — sticky card stack
-            Pure CSS: each card sticks at top:0,
-            the next one scrolls up over it.
-            z-index increments so cards layer correctly.
-        ═══════════════════════════════════════ */}
-
-
       </section>
     </>
   )
