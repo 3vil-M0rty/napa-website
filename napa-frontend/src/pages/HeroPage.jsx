@@ -5,7 +5,7 @@ import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
 import ScrollSection from '../components/ScrollSection'
 import MobileStack from '../components/MobileStack'
-import ImageGallery from '../components/ImageGallery'
+import Footer from '../components/Footer'
 
 let Canvas, useFrame, useThree, useGLTF, useTexture, THREE
 
@@ -503,8 +503,7 @@ export default function HeroPage() {
 
         <MobileStack />
         <ScrollSection />
-        <div style={{ height: '100vh', backgroundColor: C.dark }} />
-        <ImageGallery />
+        <Footer />
       </main>
     </>
   )

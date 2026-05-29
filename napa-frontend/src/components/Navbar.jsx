@@ -251,17 +251,78 @@ export default function Navbar() {
   /* ─────────────────────────────────────────────
      CLOSE MENU ON ROUTE CHANGE
   ───────────────────────────────────────────── */
+  /* ─────────────────────────────────────────────
+   CLOSE MENU ON ROUTE CHANGE
+───────────────────────────────────────────── */
   useEffect(() => {
     setMenuOpen(false)
   }, [location.pathname])
 
+  /* ─────────────────────────────────────────────
+     LOCK BODY SCROLL WHEN MOBILE MENU IS OPEN
+  ───────────────────────────────────────────── */
+  useEffect(() => {
+    if (!isMobile) return
+
+    const body = document.body
+    const html = document.documentElement
+
+    if (menuOpen) {
+      const scrollY = window.scrollY
+
+      body.dataset.scrollY = String(scrollY)
+
+      body.style.position = 'fixed'
+      body.style.top = `-${scrollY}px`
+
+      body.style.left = '0'
+      body.style.right = '0'
+
+      body.style.width = '100%'
+      body.style.overflow = 'hidden'
+
+      html.style.overflow = 'hidden'
+      html.style.touchAction = 'none'
+    } else {
+      const scrollY =
+        parseInt(body.dataset.scrollY || '0', 10)
+
+      body.style.position = ''
+      body.style.top = ''
+
+      body.style.left = ''
+      body.style.right = ''
+
+      body.style.width = ''
+      body.style.overflow = ''
+
+      html.style.overflow = ''
+      html.style.touchAction = ''
+
+      window.scrollTo(0, scrollY)
+    }
+
+    return () => {
+      body.style.position = ''
+      body.style.top = ''
+
+      body.style.left = ''
+      body.style.right = ''
+
+      body.style.width = ''
+      body.style.overflow = ''
+
+      html.style.overflow = ''
+      html.style.touchAction = ''
+    }
+  }, [menuOpen, isMobile])
   /* ─────────────────────────────────────────────
      FOOTER DETECTION
   ───────────────────────────────────────────── */
   useEffect(() => {
     const handleScroll = () => {
       const footer =
-        document.getElementById('image-gallery')
+        document.getElementById('footer')
 
       if (!footer) return
 
@@ -307,7 +368,7 @@ export default function Navbar() {
 
     const handleScroll = () => {
       const footer =
-        document.getElementById('image-gallery')
+        document.getElementById('footer')
 
       if (!footer) return
 
@@ -327,7 +388,7 @@ export default function Navbar() {
         gsap.to(logo, {
           y:
             window.innerHeight -
-            (isMobile ? 88 : 120),
+            (isMobile ? 88 : 150),
 
           duration: 0.7,
           ease: 'power3.out',
