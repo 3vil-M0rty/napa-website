@@ -4,7 +4,7 @@
 // Make sure <BookOverlay /> is rendered once at the app root (see below).
 
 import { useAtom } from "jotai";
-import { bookOpenAtom } from "../components/bookAtom";
+import { bookOpenAtom } from "./bookAtom";
 
 export const OpenBookButton = () => {
   const [isOpen, setIsOpen] = useAtom(bookOpenAtom);
