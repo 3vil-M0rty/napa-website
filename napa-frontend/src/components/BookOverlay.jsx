@@ -5,7 +5,7 @@ import { useAtom } from "jotai";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { Experience } from "./Experience";
 import { UI } from "./UI";
-import { bookOpenAtom } from "./bookAtom";
+import {bookOpenAtom} from "./bookAtom";
 import { pageAtom } from "./UI";
 import * as THREE from "three";
 
