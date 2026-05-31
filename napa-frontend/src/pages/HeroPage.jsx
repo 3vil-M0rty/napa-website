@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import ScrollSection from '../components/ScrollSection'
 import MobileStack from '../components/MobileStack'
 import Footer from '../components/Footer'
+import { OpenBookButton } from '../components/OpenBookButton'
 
 let Canvas, useFrame, useThree, useGLTF, useTexture, THREE
 
@@ -13,14 +14,14 @@ let Canvas, useFrame, useThree, useGLTF, useTexture, THREE
    Single source of truth for all colors used in this file.
    ScrollSection, MobileStack, App.jsx use the same values.          */
 const C = {
-  wineRed:   '#8b1d1f',   // primary brand red — buttons, accents, lights
+  wineRed: '#8b1d1f',   // primary brand red — buttons, accents, lights
   wineHover: '#a8282b',   // red hover state
-  cream:     '#faf6ef',   // primary light text / surfaces
-  cream60:   'rgba(250,246,239,0.6)',
-  cream45:   'rgba(250,246,239,0.45)',
-  ink:       '#1a1614',   // darkest text — used on light backgrounds
-  dark:      '#0a0a0a',   // page/section backgrounds
-  gold:      '#c9a96e',   // warm accent (MobileStack badges, rules)
+  cream: '#faf6ef',   // primary light text / surfaces
+  cream60: 'rgba(250,246,239,0.6)',
+  cream45: 'rgba(250,246,239,0.45)',
+  ink: '#1a1614',   // darkest text — used on light backgrounds
+  dark: '#0a0a0a',   // page/section backgrounds
+  gold: '#c9a96e',   // warm accent (MobileStack badges, rules)
 }
 
 const STRUCTURED_DATA = {
@@ -60,12 +61,12 @@ const IS_DESKTOP =
 let _threeReady = false
 async function _loadThree() {
   if (_threeReady) return
-  ;[{ Canvas, useFrame, useThree }, { useGLTF, useTexture }, THREE] =
-    await Promise.all([
-      import('@react-three/fiber'),
-      import('@react-three/drei'),
-      import('three'),
-    ])
+    ;[{ Canvas, useFrame, useThree }, { useGLTF, useTexture }, THREE] =
+      await Promise.all([
+        import('@react-three/fiber'),
+        import('@react-three/drei'),
+        import('three'),
+      ])
   _threeReady = true
 }
 
@@ -98,24 +99,24 @@ function HDRBackground() {
 }
 
 function BottleModel({ scrollProgress }) {
-  const model      = useGLTF('/models/bottle.glb')
-  const group      = useRef()
-  const labelRotY  = useRef(0)
-  const onHero     = useRef(true)
+  const model = useGLTF('/models/bottle.glb')
+  const group = useRef()
+  const labelRotY = useRef(0)
+  const onHero = useRef(true)
   const frozenRotY = useRef(0)
   const frozenRotX = useRef(0)
-  const wasFrozen  = useRef(false)
+  const wasFrozen = useRef(false)
 
   useEffect(() => {
     let labelOffset = 0
     model.scene.traverse((child) => {
       if (child.isMesh) {
-        child.castShadow    = true
+        child.castShadow = true
         child.receiveShadow = false
         const name = (child.name || '').toLowerCase()
         if (
           name.includes('label') || name.includes('sticker') ||
-          name.includes('paper') || name.includes('decal')   ||
+          name.includes('paper') || name.includes('decal') ||
           name.includes('etiquette')
         ) {
           const pos = child.getWorldPosition(new THREE.Vector3())
@@ -128,10 +129,10 @@ function BottleModel({ scrollProgress }) {
 
   useEffect(() => {
     const handleScroll = () => {
-      const vh  = window.innerHeight
+      const vh = window.innerHeight
       const raw = window.scrollY / vh
       scrollProgress.current = Math.min(Math.max(raw, 0), 1)
-      onHero.current          = window.scrollY < vh * 0.05
+      onHero.current = window.scrollY < vh * 0.05
     }
     handleScroll()
     window.addEventListener('scroll', handleScroll, { passive: true })
@@ -142,7 +143,7 @@ function BottleModel({ scrollProgress }) {
     if (!group.current) return
 
     const elapsed = state.clock.elapsedTime
-    const sp      = scrollProgress.current
+    const sp = scrollProgress.current
 
     const bobAmp = 0.09 * (1 - sp * 0.8)
     group.current.position.y =
@@ -165,7 +166,7 @@ function BottleModel({ scrollProgress }) {
         }
       }
     } else {
-      const t2   = (sp - 0.5) / 0.5
+      const t2 = (sp - 0.5) / 0.5
       const ease = t2 * t2 * (3 - 2 * t2)
       group.current.rotation.y =
         frozenRotY.current + (labelRotY.current - frozenRotY.current) * ease
@@ -191,44 +192,44 @@ function BottleModel({ scrollProgress }) {
 }
 
 function CursorLight() {
-  const key   = useRef()
-  const rim   = useRef()
+  const key = useRef()
+  const rim = useRef()
   const under = useRef()
 
   useFrame((state) => {
     const mx = state.mouse.x
     const my = state.mouse.y
-    const t  = state.clock.elapsedTime
+    const t = state.clock.elapsedTime
     const breath = Math.sin(t * 0.7) * 0.10 + 1
 
     if (key.current) {
       const targetX = -4 + mx * 2
-      const targetY =  2 + my * 3
+      const targetY = 2 + my * 3
       key.current.position.x += (targetX - key.current.position.x) * 0.08
       key.current.position.y += (targetY - key.current.position.y) * 0.08
-      key.current.position.z  = -2
-      key.current.intensity   = 60 * breath
+      key.current.position.z = -2
+      key.current.intensity = 60 * breath
     }
 
     if (rim.current) {
-      const targetX =  5 - mx * 1.5
+      const targetX = 5 - mx * 1.5
       const targetY = -my * 2 + 1
       rim.current.position.x += (targetX - rim.current.position.x) * 0.03
       rim.current.position.y += (targetY - rim.current.position.y) * 0.03
-      rim.current.position.z  = -4
-      rim.current.intensity   = 20 * breath
+      rim.current.position.z = -4
+      rim.current.intensity = 20 * breath
     }
 
     if (under.current) {
       under.current.position.x += (mx * 1.2 - under.current.position.x) * 0.04
-      under.current.intensity   = 18 * (Math.sin(t * 0.4) * 0.08 + 1)
+      under.current.intensity = 18 * (Math.sin(t * 0.4) * 0.08 + 1)
     }
   })
 
   return (
     <>
-      <pointLight ref={key}   color="#fffb00" intensity={60}  distance={45} decay={1.2} castShadow={false} position={[-4, 2, -2]} />
-      <pointLight ref={rim}   color="#d10000" intensity={20}  distance={40} decay={1.4} castShadow={false} position={[5, 1, -4]} />
+      <pointLight ref={key} color="#fffb00" intensity={60} distance={45} decay={1.2} castShadow={false} position={[-4, 2, -2]} />
+      <pointLight ref={rim} color="#d10000" intensity={20} distance={40} decay={1.4} castShadow={false} position={[5, 1, -4]} />
       {/* Under light uses brand wine red — keeps tint coherent with C.wineRed */}
       <pointLight ref={under} color={C.wineRed} intensity={18} distance={14} decay={2.2} castShadow={false} position={[0, -4, 2]} />
     </>
@@ -275,7 +276,7 @@ function DesktopCanvasHero({ scrollProgress }) {
           shadow-camera-top={8} shadow-camera-bottom={-8}
           shadow-bias={-0.0004} shadow-radius={6}
         />
-        <directionalLight position={[5, 2, 4]}  intensity={0.6} color="#ffb870" castShadow={false} />
+        <directionalLight position={[5, 2, 4]} intensity={0.6} color="#ffb870" castShadow={false} />
         <directionalLight position={[-5, 6, -8]} intensity={1.0} color="#7baeff" castShadow={false} />
         <CursorLight />
         <BottleModel scrollProgress={scrollProgress} />
@@ -317,9 +318,9 @@ function Vignette() {
 }
 
 function HeroOverlay() {
-  const { t }     = useTranslation()
+  const { t } = useTranslation()
   const fontSerif = "'Cormorant Garamond', 'Cormorant', Georgia, 'Times New Roman', serif"
-  const fontSans  = "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+  const fontSans = "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif"
 
   const [isMobile, setIsMobile] = useState(!IS_DESKTOP)
   useEffect(() => {
@@ -337,7 +338,7 @@ function HeroOverlay() {
         style={{
           position: 'absolute', top: '50%', transform: 'translateY(-50%)',
           right: isMobile ? '1rem' : '3vw',
-          left:  isMobile ? '1rem' : '55%',
+          left: isMobile ? '1rem' : '55%',
           display: 'flex', flexDirection: 'column',
           alignItems: isMobile ? 'center' : 'flex-end',
           gap: '22px', textAlign: isMobile ? 'center' : 'right',
@@ -395,7 +396,7 @@ function HeroOverlay() {
         style={{
           position: 'absolute',
           bottom: isMobile ? '1.5rem' : '2.5rem',
-          left:   isMobile ? '1rem'   : '2rem',
+          left: isMobile ? '1rem' : '2rem',
           fontStyle: 'normal', display: 'flex', flexDirection: 'column', gap: '3px',
         }}
       >
@@ -451,8 +452,8 @@ function HeroOverlay() {
 
 export default function HeroPage() {
   const scrollProgress = useRef(0)
-  const { t, i18n }   = useTranslation()
-  const lang           = i18n.language === 'fr' ? 'fr' : 'en'
+  const { t, i18n } = useTranslation()
+  const lang = i18n.language === 'fr' ? 'fr' : 'en'
 
   return (
     <>
@@ -460,29 +461,29 @@ export default function HeroPage() {
         <html lang={lang} />
         <title>{t('seo.title')}</title>
         <meta name="description" content={t('seo.description')} />
-        <meta name="keywords"    content={t('seo.keywords')} />
-        <link rel="canonical"    href="https://napachapterone.com/" />
-        <meta property="og:type"        content="website" />
-        <meta property="og:site_name"   content="NAPA Chapter One" />
-        <meta property="og:title"       content={t('seo.ogTitle')} />
+        <meta name="keywords" content={t('seo.keywords')} />
+        <link rel="canonical" href="https://napachapterone.com/" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="NAPA Chapter One" />
+        <meta property="og:title" content={t('seo.ogTitle')} />
         <meta property="og:description" content={t('seo.ogDescription')} />
-        <meta property="og:image"       content="https://napachapterone.com/og-image.jpg" />
-        <meta property="og:image:alt"   content={t('seo.ogImageAlt')} />
-        <meta property="og:url"         content="https://napachapterone.com/" />
-        <meta property="og:locale"           content={lang === 'fr' ? 'fr_FR' : 'en_US'} />
+        <meta property="og:image" content="https://napachapterone.com/og-image.jpg" />
+        <meta property="og:image:alt" content={t('seo.ogImageAlt')} />
+        <meta property="og:url" content="https://napachapterone.com/" />
+        <meta property="og:locale" content={lang === 'fr' ? 'fr_FR' : 'en_US'} />
         <meta property="og:locale:alternate" content={lang === 'fr' ? 'en_US' : 'fr_FR'} />
-        <meta name="twitter:card"        content="summary_large_image" />
-        <meta name="twitter:title"       content={t('seo.ogTitle')} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={t('seo.ogTitle')} />
         <meta name="twitter:description" content={t('seo.ogDescription')} />
-        <meta name="twitter:image"       content="https://napachapterone.com/og-image.jpg" />
-        <meta name="twitter:image:alt"   content={t('seo.ogImageAlt')} />
-        <meta name="geo.region"    content="MA-09" />
+        <meta name="twitter:image" content="https://napachapterone.com/og-image.jpg" />
+        <meta name="twitter:image:alt" content={t('seo.ogImageAlt')} />
+        <meta name="geo.region" content="MA-09" />
         <meta name="geo.placename" content="Marrakech, Morocco" />
-        <meta name="geo.position"  content="31.6351689;-8.0152064" />
-        <meta name="ICBM"          content="31.6351689, -8.0152064" />
-        <meta name="robots"  content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
-        <meta name="author"        content="NAPA Chapter One" />
-        <meta name="theme-color"   content={C.wineRed} />
+        <meta name="geo.position" content="31.6351689;-8.0152064" />
+        <meta name="ICBM" content="31.6351689, -8.0152064" />
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+        <meta name="author" content="NAPA Chapter One" />
+        <meta name="theme-color" content={C.wineRed} />
         <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
         <script type="application/ld+json">{JSON.stringify(STRUCTURED_DATA)}</script>
       </Helmet>
@@ -503,6 +504,9 @@ export default function HeroPage() {
 
         <MobileStack />
         <ScrollSection />
+        <div style={{ height: '100vh', width: '100%',display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'black' }}>
+          <OpenBookButton />
+        </div>
         <Footer />
       </main>
     </>

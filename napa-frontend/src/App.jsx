@@ -8,6 +8,7 @@ import Cursor         from './components/Cursor'
 import HeroPage       from './pages/HeroPage'
 import NapaCo         from './assets/napasolo.svg?react'
 import { SLIDES }     from './components/ScrollSection'
+import { BookOverlay } from './components/BookOverlay'
 
 /* =========================================================
    DESKTOP DETECTION
@@ -81,7 +82,7 @@ const glbPromise = !IS_DESKTOP
    CONSTANTS
 ========================================================= */
 const MIN_DISPLAY_MS   = 2000
-const DRAW_DURATION_MS = 1800
+const DRAW_DURATION_MS = 400
 const WINE_RED         = '#8b1d1f'
 const ROSE             = '#cc5355'
 const BLUSH            = '#ebb3b3'
@@ -91,13 +92,13 @@ const FONT_SANS        = "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-seri
    LOADER OVERLAY
 ========================================================= */
 function LoaderOverlay({ progress }) {
-  const svgRef       = useRef(null)
-  const rafRef       = useRef(null)
-  const animStartRef = useRef(null)
+  const svgRef = useRef(null)
+  const rafRef = useRef(null)
 
   useEffect(() => {
-    const svg = svgRef.current
+    const svg       = svgRef.current
     if (!svg) return
+    const mountTime = Date.now()
 
     const setup = () => {
       const els = Array.from(
@@ -120,11 +121,10 @@ function LoaderOverlay({ progress }) {
         el.style.transition       = 'none'
       })
 
-      svg.style.opacity    = '1'
-      animStartRef.current = Date.now()
+      svg.style.opacity = '1'
 
       const draw = () => {
-        const elapsed = Date.now() - animStartRef.current
+        const elapsed = Date.now() - mountTime
         const t       = Math.min(1, elapsed / DRAW_DURATION_MS)
         const eased   = t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2
 
@@ -290,6 +290,7 @@ export default function App() {
         <Route path="/bookings" element={<MyBookingsPage />} />
         <Route path="/admin"    element={<AdminPage />} /> */}
       </Routes>
+      <BookOverlay />
     </>
   )
 }

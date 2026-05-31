@@ -15,13 +15,13 @@ export default function Footer() {
                     mouseForce={20}
                     cursorSize={80}
                     isViscous
-                    viscous={80}
+                    viscous={10}
                     iterationsViscous={32}
                     iterationsPoisson={32}
                     resolution={0.5}
-                    isBounce={false}
+                    isBounce={true}
                     autoDemo
-                    autoSpeed={0.5}
+                    autoSpeed={5.5}
                     autoIntensity={2.2}
                     takeoverDuration={0.25}
                     autoResumeDelay={3000}
