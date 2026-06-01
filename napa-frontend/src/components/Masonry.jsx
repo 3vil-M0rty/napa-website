@@ -39,14 +39,12 @@ const preloadImages = async urls => {
   );
 };
 
-// ── Font tokens matching HeroPage ────────────────────────────────────────────
 const FONT_SERIF = "'Cormorant Garamond', 'Cormorant', Georgia, 'Times New Roman', serif";
 const FONT_SANS  = "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif";
 const WINE_RED   = '#8b1d1f';
 const CREAM      = '#faf6ef';
 const CREAM60    = 'rgba(250,246,239,0.6)';
 
-// ── Drink info overlay ───────────────────────────────────────────────────────
 const DrinkOverlay = ({ name, description, visible }) => (
   <div
     className="drink-overlay"
@@ -58,7 +56,6 @@ const DrinkOverlay = ({ name, description, visible }) => (
       flexDirection: 'column',
       justifyContent: 'flex-end',
       padding: '20px 16px 18px',
-      // Gradient from transparent top to dark bottom
       background: visible
         ? 'linear-gradient(to top, rgba(10,0,2,0.88) 0%, rgba(10,0,2,0.3) 55%, transparent 100%)'
         : 'linear-gradient(to top, rgba(10,0,2,0) 0%, transparent 100%)',
@@ -67,7 +64,6 @@ const DrinkOverlay = ({ name, description, visible }) => (
       pointerEvents: 'none',
     }}
   >
-    {/* Thin accent line */}
     <span style={{
       display: 'block',
       width: visible ? '32px' : '0px',
@@ -110,7 +106,6 @@ const DrinkOverlay = ({ name, description, visible }) => (
   </div>
 );
 
-// ── Main Masonry ─────────────────────────────────────────────────────────────
 const Masonry = ({
   items,
   ease = 'power3.out',
@@ -168,6 +163,12 @@ const Masonry = ({
     });
   }, [columns, items, width]);
 
+  // FIX 3: compute total height from the grid so .list grows to fit all cards
+  const totalHeight = useMemo(() => {
+    if (!grid.length) return 0;
+    return Math.max(...grid.map(item => item.y + item.h));
+  }, [grid]);
+
   const hasMounted = useRef(false);
 
   useLayoutEffect(() => {
@@ -214,7 +215,8 @@ const Masonry = ({
   };
 
   return (
-    <div ref={containerRef} className="list">
+    // FIX 3: height driven by computed totalHeight, not 100%
+    <div ref={containerRef} className="list" style={{ height: totalHeight || undefined }}>
       {grid.map(item => (
         <div
           key={item.id}
@@ -228,7 +230,6 @@ const Masonry = ({
             className="item-img"
             style={{ backgroundImage: `url(${item.img})` }}
           >
-            {/* Drink info overlay */}
             {(item.name || item.description) && (
               <DrinkOverlay
                 name={item.name}

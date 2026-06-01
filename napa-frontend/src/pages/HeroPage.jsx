@@ -510,9 +510,10 @@ export default function HeroPage() {
 
         <div style={{
           width: '100%',
-          height: '100vh',
+          height: 'auto',        // FIX 2: was '100vh', now grows to fit all cards
+          minHeight: '100vh',    // FIX 2: still fills screen when content is short
           background: 'black',
-          padding: '0 1rem 60px',  // top padding for the grid, bottom for breathing room
+          padding: '0 1rem 60px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -520,55 +521,13 @@ export default function HeroPage() {
         }}>
           <Masonry
             items={[
-              {
-                id: "1",
-                img: "/images/cocktail1.webp",
-                height: 400,
-                name: "Rouge Velours",
-                description: "Pinot Noir · Hibiscus · Cardamom",
-              },
-              {
-                id: "2",
-                img: "/images/cocktail2.webp",
-                height: 250,
-                name: "Jardin d'Hiver",
-                description: "Gin · Rose · Cucumber",
-              },
-              {
-                id: "3",
-                img: "/images/cocktail3.webp",
-                height: 600,
-                name: "Soleil de Marrakech",
-                description: "Rum · Saffron · Orange Blossom",
-              },
-              {
-                id: "4",
-                img: "/images/cocktail4.webp",
-                height: 350,
-                name: "Nuit Noire",
-                description: "Mezcal · Black Sesame · Lime",
-              },
-              {
-                id: "5",
-                img: "/images/cocktail5.webp",
-                height: 450,
-                name: "Aube Dorée",
-                description: "Champagne · Argan · Honey",
-              },
-              {
-                id: "6",
-                img: "/images/cocktail3.webp",
-                height: 500,
-                name: "Sable de l'Étoile",
-                description: "Tequila · Agave · Pineapple",
-              },
-              {
-                id: "7",
-                img: "/images/cocktail4.webp",
-                height: 350,
-                name: "Nuit Noire",
-                description: "Mezcal · Black Sesame · Lime",
-              }
+              { id: "1", img: "/images/cocktail1.webp", height: 400, name: t('cocktails.rouge_velours_name'), description: t('cocktails.rouge_velours_desc') },
+              { id: "2", img: "/images/cocktail2.webp", height: 250, name: t('cocktails.jardin_hiver_name'), description: t('cocktails.jardin_hiver_desc') },
+              { id: "3", img: "/images/cocktail3.webp", height: 600, name: t('cocktails.soleil_marrakech_name'), description: t('cocktails.soleil_marrakech_desc') },
+              { id: "4", img: "/images/cocktail4.webp", height: 350, name: t('cocktails.nuit_noire_name'), description: t('cocktails.nuit_noire_desc') },
+              { id: "5", img: "/images/cocktail5.webp", height: 450, name: t('cocktails.aube_doree_name'), description: t('cocktails.aube_doree_desc') },
+              { id: "6", img: "/images/cocktail3.webp", height: 500, name: t('cocktails.sable_etoile_name'), description: t('cocktails.sable_etoile_desc') },
+              { id: "7", img: "/images/cocktail4.webp", height: 350, name: t('cocktails.nuit_noire_name'), description: t('cocktails.nuit_noire_desc') },
             ]}
             colorShiftOnHover={false}
           />

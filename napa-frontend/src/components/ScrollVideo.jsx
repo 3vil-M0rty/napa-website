@@ -12,27 +12,34 @@ const CREAM      = '#faf6ef';
 const CREAM60    = 'rgba(250,246,239,0.6)';
 const WINE_RED   = '#8b1d1f';
 
-// Text blocks that appear at specific scroll progress points (0–1)
 const TEXT_BLOCKS = [
   { key: 'scrollVideo.block1', progress: 0.15 },
   { key: 'scrollVideo.block2', progress: 0.5  },
   { key: 'scrollVideo.block3', progress: 0.82 },
 ];
 
-export const ScrollVideo = ({
-  src,
-  scrollDuration = 3000,
-}) => {
+const isMobile = () => /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+export const ScrollVideo = ({ src, scrollDuration = 3000 }) => {
   const sectionRef  = useRef(null);
   const videoRef    = useRef(null);
   const progressRef = useRef(null);
-  const [scrollP, setScrollP] = useState(0); // 0–1
+  const [scrollP, setScrollP]   = useState(0);
   const { t } = useTranslation();
 
   useEffect(() => {
     const video   = videoRef.current;
     const section = sectionRef.current;
     if (!video || !section) return;
+
+    // ── Mobile unlock: muted autoplay trick forces browser to allow scrubbing ──
+    const unlockVideo = () => {
+      video.play().then(() => video.pause()).catch(() => {});
+      document.removeEventListener("touchstart", unlockVideo);
+      document.removeEventListener("click", unlockVideo);
+    };
+    document.addEventListener("touchstart", unlockVideo, { once: true });
+    document.addEventListener("click", unlockVideo, { once: true });
 
     const init = () => {
       const duration = video.duration;
@@ -45,7 +52,8 @@ export const ScrollVideo = ({
         p: 1,
         ease: "none",
         onUpdate() {
-          video.currentTime = obj.t;
+          // ── Clamp to avoid out-of-range errors on mobile ──
+          video.currentTime = Math.min(Math.max(obj.t, 0), duration - 0.01);
           if (progressRef.current) {
             progressRef.current.style.width = `${obj.p * 100}%`;
           }
@@ -56,20 +64,27 @@ export const ScrollVideo = ({
           start: "top top",
           end: `+=${scrollDuration}`,
           pin: true,
-          scrub: 0.5,
+          scrub: isMobile() ? true : 0.5, // true = frame-perfect on mobile
           anticipatePin: 1,
+          invalidateOnRefresh: true,       // recalculates on orientation change
         },
       });
 
       return () => tween.kill();
     };
 
-    if (video.readyState >= 1) return init();
-    video.addEventListener("loadedmetadata", init, { once: true });
-    return () => video.removeEventListener("loadedmetadata", init);
+    // ── Use loadedmetadata for desktop, loadeddata for mobile (more reliable) ──
+    const event = isMobile() ? "loadeddata" : "loadedmetadata";
+
+    if (video.readyState >= (isMobile() ? 2 : 1)) {
+      init();
+    } else {
+      video.addEventListener(event, init, { once: true });
+    }
+
+    return () => video.removeEventListener(event, init);
   }, [scrollDuration]);
 
-  // Which text block is active — find the last one whose progress we've passed
   const activeBlock = TEXT_BLOCKS.reduce((acc, block, i) => {
     if (scrollP >= block.progress - 0.04) return i;
     return acc;
@@ -92,7 +107,9 @@ export const ScrollVideo = ({
         src={src}
         muted
         playsInline
-        preload="auto"
+        preload="auto"          // auto = load full video, needed for scrubbing
+        webkit-playsinline="true" // legacy iOS Safari
+        x5-playsinline="true"    // legacy Android WeChat
         style={{
           position: "absolute",
           inset: 0,
@@ -102,7 +119,7 @@ export const ScrollVideo = ({
         }}
       />
 
-      {/* ── Dark vignette so text is readable ───────────────────── */}
+      {/* ── Dark vignette ───────────────────────────────────────── */}
       <div style={{
         position: "absolute",
         inset: 0,
@@ -110,7 +127,7 @@ export const ScrollVideo = ({
         pointerEvents: "none",
       }} />
 
-      {/* ── Text panel (left side) ──────────────────────────────── */}
+      {/* ── Text panel ──────────────────────────────────────────── */}
       <div style={{
         position: "absolute",
         top: "50%",
@@ -138,7 +155,6 @@ export const ScrollVideo = ({
                 gap: "16px",
               }}
             >
-              {/* Eyebrow */}
               <span style={{
                 fontFamily: FONT_SANS,
                 fontSize: "10px",
@@ -150,7 +166,6 @@ export const ScrollVideo = ({
                 {t(`${block.key}.eyebrow`)}
               </span>
 
-              {/* Accent line */}
               <span style={{
                 display: "block",
                 width: isActive ? "40px" : "0px",
@@ -159,7 +174,6 @@ export const ScrollVideo = ({
                 transition: "width 0.6s ease 0.2s",
               }} />
 
-              {/* Headline */}
               <h2 style={{
                 fontFamily: FONT_SERIF,
                 fontStyle: "italic",
@@ -173,7 +187,6 @@ export const ScrollVideo = ({
                 {t(`${block.key}.title`)}
               </h2>
 
-              {/* Body */}
               <p style={{
                 fontFamily: FONT_SANS,
                 fontSize: "clamp(12px, 1vw, 14px)",
@@ -202,15 +215,11 @@ export const ScrollVideo = ({
       }}>
         <div
           ref={progressRef}
-          style={{
-            height: "100%",
-            width: "0%",
-            background: WINE_RED,
-          }}
+          style={{ height: "100%", width: "0%", background: WINE_RED }}
         />
       </div>
 
-      {/* ── Block indicator dots (right side) ──────────────────── */}
+      {/* ── Block indicator dots ─────────────────────────────────── */}
       <div style={{
         position: "absolute",
         right: "clamp(16px, 3vw, 40px)",
@@ -226,7 +235,7 @@ export const ScrollVideo = ({
             key={i}
             style={{
               display: "block",
-              width: activeBlock === i ? "1px" : "1px",
+              width: "1px",
               height: activeBlock === i ? "32px" : "12px",
               background: activeBlock === i ? CREAM : "rgba(255,255,255,0.25)",
               transition: "height 0.4s ease, background 0.4s ease",
