@@ -10,21 +10,10 @@ import NapaCo         from './assets/napasolo.svg?react'
 import { SLIDES }     from './components/ScrollSection'
 import { BookOverlay } from './components/BookOverlay'
 
-/* =========================================================
-   DESKTOP DETECTION
-   Use pointer:fine (mouse) instead of touch events.
-   Touch event detection is unreliable on dev machines —
-   Chrome/Edge report ontouchstart=true on any touchscreen
-   laptop or when DevTools is open with touch emulation.
-   pointer:fine is the correct signal for "has a mouse".
-========================================================= */
 const IS_DESKTOP =
   typeof window !== 'undefined' &&
   window.matchMedia('(pointer: fine)').matches
 
-/* =========================================================
-   PRELOAD SLIDE IMAGES
-========================================================= */
 const slideImagePromise = Promise.all(
   SLIDES.map(s => new Promise(resolve => {
     const img   = new Image()
@@ -34,14 +23,6 @@ const slideImagePromise = Promise.all(
   }))
 )
 
-/* =========================================================
-   GLB FETCH PROMISE (desktop only)
-   Fetches the GLB manually so we get real byte-level progress
-   without relying on useProgress (which only tracks assets
-   inside a Canvas Suspense boundary — our GLB is outside one).
-   Also primes THREE.Cache so useGLTF inside BottleModel
-   resolves instantly with no double-fetch.
-========================================================= */
 let glbProgressCallback = null
 let glbProgress         = 0
 
@@ -65,7 +46,6 @@ const glbPromise = !IS_DESKTOP
           }
         }
 
-        // Prime THREE.Cache so useGLTF hits it instantly
         const buffer = await new Blob(chunks).arrayBuffer()
         const THREE  = await import('three')
         THREE.Cache.add('/models/bottle.glb', buffer)
@@ -78,9 +58,6 @@ const glbPromise = !IS_DESKTOP
         glbProgressCallback?.(100)
       })
 
-/* =========================================================
-   CONSTANTS
-========================================================= */
 const MIN_DISPLAY_MS   = 2000
 const DRAW_DURATION_MS = 400
 const WINE_RED         = '#8b1d1f'
@@ -88,9 +65,6 @@ const ROSE             = '#cc5355'
 const BLUSH            = '#ebb3b3'
 const FONT_SANS        = "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif"
 
-/* =========================================================
-   LOADER OVERLAY
-========================================================= */
 function LoaderOverlay({ progress }) {
   const svgRef = useRef(null)
   const rafRef = useRef(null)
@@ -200,19 +174,13 @@ function LoaderOverlay({ progress }) {
   )
 }
 
-/* =========================================================
-   GLOBAL LOADER CONTROLLER
-   All hooks are called unconditionally — IS_DESKTOP gates
-   the visible state, not the hook calls themselves.
-========================================================= */
 function GlobalLoader() {
   const [progress,    setProgress]    = useState(glbProgress)
   const [imagesReady, setImagesReady] = useState(false)
-  const [glbReady,    setGlbReady]    = useState(!IS_DESKTOP) // mobile: skip immediately
-  const [visible,     setVisible]     = useState(IS_DESKTOP)  // mobile: never show
+  const [glbReady,    setGlbReady]    = useState(!IS_DESKTOP)
+  const [visible,     setVisible]     = useState(IS_DESKTOP)
   const openedAt                      = useRef(Date.now())
 
-  // Wire progress callback for streaming fetch updates
   useEffect(() => {
     if (!IS_DESKTOP) return
     glbProgressCallback = setProgress
@@ -220,7 +188,6 @@ function GlobalLoader() {
     return () => { glbProgressCallback = null }
   }, [])
 
-  // Resolve when GLB fetch completes
   useEffect(() => {
     if (!IS_DESKTOP) return
     glbPromise.then(() => {
@@ -229,12 +196,10 @@ function GlobalLoader() {
     })
   }, [])
 
-  // Resolve when slide images load
   useEffect(() => {
     slideImagePromise.then(() => setImagesReady(true))
   }, [])
 
-  // Hide once both ready + minimum display time elapsed
   useEffect(() => {
     if (!glbReady || !imagesReady) return
     const elapsed   = Date.now() - openedAt.current
@@ -243,10 +208,18 @@ function GlobalLoader() {
     return () => clearTimeout(t)
   }, [glbReady, imagesReady])
 
-  // Lock scroll while loader visible
+  // ── CHANGED: reset body background to dark once loader exits ──
   useEffect(() => {
-    document.body.style.overflow = visible ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
+    if (visible) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+      // Remove the pink gradient — set to site dark background
+      document.body.style.background = '#0a0a0a'
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
   }, [visible])
 
   if (!IS_DESKTOP) return null
@@ -260,6 +233,10 @@ function GlobalLoader() {
 
 /* =========================================================
    CRITICAL CSS
+   ── CHANGED: body starts dark, not pink.
+   The loader overlay covers it with the gradient anyway,
+   so the pink body bg was only ever visible as a flash
+   on slow paints or after the loader exits.
 ========================================================= */
 if (typeof document !== 'undefined') {
   const existing = document.getElementById('napa-loader-critical')
@@ -267,16 +244,13 @@ if (typeof document !== 'undefined') {
     const style = document.createElement('style')
     style.id    = 'napa-loader-critical'
     style.textContent = `
-      html,body{margin:0;padding:0;}
-      body{background:linear-gradient(160deg,#8b1d1f 0%,#cc5355 45%,#ebb3b3 100%);}
+      html, body { margin: 0; padding: 0; }
+      body { background: #0a0a0a; }
     `
     document.head.appendChild(style)
   }
 }
 
-/* =========================================================
-   APP
-========================================================= */
 export default function App() {
   return (
     <>
@@ -284,11 +258,13 @@ export default function App() {
       <Cursor />
       <Navbar />
       <Routes>
-        <Route path="/"         element={<HeroPage />} />
-{/*         <Route path="/reserve"  element={<ReservePage />} />
+        <Route path="/" element={<HeroPage />} />
+        {/*
+        <Route path="/reserve"  element={<ReservePage />} />
         <Route path="/auth"     element={<AuthPage />} />
         <Route path="/bookings" element={<MyBookingsPage />} />
-        <Route path="/admin"    element={<AdminPage />} /> */}
+        <Route path="/admin"    element={<AdminPage />} />
+        */}
       </Routes>
       <BookOverlay />
     </>

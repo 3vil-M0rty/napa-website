@@ -7,6 +7,9 @@ import ScrollSection from '../components/ScrollSection'
 import MobileStack from '../components/MobileStack'
 import Footer from '../components/Footer'
 import { OpenBookButton } from '../components/OpenBookButton'
+import { ScrollVideo } from '../components/ScrollVideo'
+import LogoLoop from '../components/LogoLoop'
+import Masonry from '../components/Masonry'
 
 let Canvas, useFrame, useThree, useGLTF, useTexture, THREE
 
@@ -504,9 +507,102 @@ export default function HeroPage() {
 
         <MobileStack />
         <ScrollSection />
-        <div style={{ height: '100vh', width: '100%',display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'black' }}>
+
+        <div style={{
+          width: '100%',
+          height: '100vh',
+          background: 'black',
+          padding: '0 1rem 60px',  // top padding for the grid, bottom for breathing room
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '32px',
+        }}>
+          <Masonry
+            items={[
+              {
+                id: "1",
+                img: "/images/cocktail1.webp",
+                height: 400,
+                name: "Rouge Velours",
+                description: "Pinot Noir · Hibiscus · Cardamom",
+              },
+              {
+                id: "2",
+                img: "/images/cocktail2.webp",
+                height: 250,
+                name: "Jardin d'Hiver",
+                description: "Gin · Rose · Cucumber",
+              },
+              {
+                id: "3",
+                img: "/images/cocktail3.webp",
+                height: 600,
+                name: "Soleil de Marrakech",
+                description: "Rum · Saffron · Orange Blossom",
+              },
+              {
+                id: "4",
+                img: "/images/cocktail4.webp",
+                height: 350,
+                name: "Nuit Noire",
+                description: "Mezcal · Black Sesame · Lime",
+              },
+              {
+                id: "5",
+                img: "/images/cocktail5.webp",
+                height: 450,
+                name: "Aube Dorée",
+                description: "Champagne · Argan · Honey",
+              },
+              {
+                id: "6",
+                img: "/images/cocktail3.webp",
+                height: 500,
+                name: "Sable de l'Étoile",
+                description: "Tequila · Agave · Pineapple",
+              },
+              {
+                id: "7",
+                img: "/images/cocktail4.webp",
+                height: 350,
+                name: "Nuit Noire",
+                description: "Mezcal · Black Sesame · Lime",
+              }
+            ]}
+            colorShiftOnHover={false}
+          />
           <OpenBookButton />
         </div>
+        <ScrollVideo
+          src="/videos/cocktail-making.mp4"
+          scrollDuration={4000}   // px of scroll = full video playback
+        // optional t
+        // op-left caption
+        />
+
+        <div style={{ height: '100px', position: 'relative', overflow: 'hidden', background: '#000', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          {/* Basic horizontal loop */}
+          <LogoLoop
+            logos={
+              [
+                { src: "/images/timenceguide.png", alt: "Company 1", href: "https://timenceguide.com/en/article/eat-drink/napa-chapter-one-marrakech" },
+                { src: "/images/telegraph.png", alt: "Company 2", href: "https://www.telegraph.co.uk/travel/destinations/africa/morocco/marrakech/articles/marrakech-nightlife/" },
+                { src: "/images/showlifer.png", alt: "Company 3", href: "https://shoelifer.com/sorties/decouvertes/nouveau-spot-a-marrakech-les-adresses-que-tout-le-monde-va-bientot-sarracher/" },
+              ]
+            }
+            speed={20}
+            direction="left"
+            logoHeight={55}
+            gap={80}
+            hoverSpeed={0}
+            scaleOnHover
+            fadeOut
+            fadeOutColor="#000"
+            ariaLabel="Press partners"
+          />
+        </div>
+
         <Footer />
       </main>
     </>

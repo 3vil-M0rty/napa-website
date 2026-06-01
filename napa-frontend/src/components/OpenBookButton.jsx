@@ -1,88 +1,48 @@
-// src/pages/HeroPage.jsx  (or wherever you use it)
-//
-// Usage: just drop <OpenBookButton /> anywhere in your JSX.
-// Make sure <BookOverlay /> is rendered once at the app root (see below).
-
+// src/components/OpenBookButton.jsx
 import { useAtom } from "jotai";
 import { bookOpenAtom } from "./bookAtom";
+import {useTranslation} from "react-i18next";
+
+const FONT_SANS  = "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif";
+const WINE_RED   = '#8b1d1f';
+const WINE_HOVER = '#a8282b';
+const CREAM      = '#faf6ef';
+
+const MenuButton = ({ onClick, label, active }) => (
+  <button
+    onClick={onClick}
+    style={{
+      fontFamily: FONT_SANS,
+      fontSize: '10px',
+      fontWeight: 500,
+      letterSpacing: '3px',
+      textTransform: 'uppercase',
+      padding: '12px 24px',
+      background: active ? WINE_HOVER : WINE_RED,
+      color: CREAM,
+      border: 'none',
+      borderRadius: 0,
+      cursor: 'pointer',
+      transition: 'background 0.2s ease',
+      whiteSpace: 'nowrap',
+    }}
+    onMouseEnter={e => { e.currentTarget.style.background = WINE_HOVER }}
+    onMouseLeave={e => { e.currentTarget.style.background = active ? WINE_HOVER : WINE_RED }}
+  >
+    {label}
+  </button>
+);
 
 export const OpenBookButton = () => {
   const [isOpen, setIsOpen] = useAtom(bookOpenAtom);
-
+  const { t } = useTranslation();
   return (
-    <button
-      onClick={() => setIsOpen((v) => !v)}
-      aria-label={isOpen ? "Close book" : "Open book"}
-      style={{
-        // Positioning: adjust to fit your hero layout
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 10,
-        padding: "14px 28px",
-        borderRadius: 999,
-        border: "1.5px solid rgba(255,255,255,0.3)",
-        background: isOpen
-          ? "rgba(255,255,255,0.12)"
-          : "rgba(255,255,255,0.07)",
-        color: "#fff",
-        fontSize: 15,
-        fontWeight: 600,
-        letterSpacing: "0.04em",
-        textTransform: "uppercase",
-        cursor: "pointer",
-        backdropFilter: "blur(8px)",
-        WebkitBackdropFilter: "blur(8px)",
-        transition: "background 0.25s, border-color 0.25s, transform 0.2s",
-        userSelect: "none",
-        // Touch-friendly tap target
-        minWidth: 44,
-        minHeight: 44,
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.background = "rgba(255,255,255,0.18)";
-        e.currentTarget.style.borderColor = "rgba(255,255,255,0.6)";
-        e.currentTarget.style.transform = "translateY(-2px)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.background = isOpen
-          ? "rgba(255,255,255,0.12)"
-          : "rgba(255,255,255,0.07)";
-        e.currentTarget.style.borderColor = "rgba(255,255,255,0.3)";
-        e.currentTarget.style.transform = "translateY(0)";
-      }}
-    >
-      {/* Animated book icon */}
-      <BookIcon open={isOpen} />
-      {isOpen ? "Close Book" : "Open Book"}
-    </button>
+    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
+      <MenuButton
+        onClick={() => setIsOpen(v => !v)}
+        label={t('menu')}
+        active={isOpen}
+      />
+    </div>
   );
 };
-
-// Lightweight SVG book icon that morphs between open/closed
-const BookIcon = ({ open }) => (
-  <svg
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    style={{ transition: "transform 0.3s ease", transform: open ? "rotate(10deg)" : "rotate(0deg)" }}
-  >
-    {open ? (
-      // Open book
-      <>
-        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-      </>
-    ) : (
-      // Closed book
-      <>
-        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-      </>
-    )}
-  </svg>
-);
