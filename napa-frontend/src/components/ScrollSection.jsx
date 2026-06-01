@@ -25,11 +25,11 @@ export const SLIDES = [
   },
   {
     background:       '/images/food.webp',
-    mobileBackground: '/images/chef.webp',
+    mobileBackground: '/images/food.webp',
     titleKey:         'experience.slides.six.title',
     subKey:           'experience.slides.six.sub',
     img:              '/images/chef.webp',
-    mobileImg:        '/images/food.webp',
+    mobileImg:        '/images/chef.webp',
     altKey:           'experience.slides.six.imgAlt',
     altFallback:      'Chef Driss Alaoui plating seasonal farm-to-table dishes at NAPA Chapter One',
     bgAlt:            'NAPA Chapter One kitchen',
