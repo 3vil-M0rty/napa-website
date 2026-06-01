@@ -179,7 +179,7 @@ const CSS = `
 
 export default function MobileStack() {
   const wrapRef = useRef(null)
-  const { i18n } = useTranslation()
+  const { i18n, t } = useTranslation()
 
   useEffect(() => {
     if (document.getElementById(ID)) return
@@ -250,18 +250,18 @@ export default function MobileStack() {
 
             <div className="mbs3-text">
               <span className="mbs3-slug">
-                {slide.slug || `chapter ${i + 1}`}
+                {t(`experience.slides.${['one', 'six', 'two', 'three'][i]}.slug`, slide.slug)}
               </span>
 
               <div className="mbs3-rule" />
 
               <h2 className="mbs3-title">
-                {slide.altFallback || `Slide ${i + 1}`}
+                {t(slide.titleKey, slide.altFallback)}
               </h2>
 
               {slide.subKey && (
                 <p className="mbs3-sub">
-                  {slide.subKey}
+                  {t(slide.subKey)}
                 </p>
               )}
 

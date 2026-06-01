@@ -290,17 +290,26 @@ function DesktopCanvasHero({ scrollProgress }) {
 
 function MobileStaticBackground() {
   return (
-    <div
-      aria-hidden="true"
-      style={{
-        position: 'absolute', inset: 0, zIndex: 1,
-        backgroundImage: 'url(/images/a0.webp)',
-        backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat',
-      }}
-    />
+    <>
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute', inset: 0, zIndex: 1,
+          backgroundImage: 'url(/images/a0.webp)',
+          backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat',
+        }}
+      />
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute', inset: 0, zIndex: 2,
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.65) 60%, rgba(0,0,0,0.85) 100%)',
+          pointerEvents: 'none',
+        }}
+      />
+    </>
   )
 }
-
 function FilmGrain() {
   return (
     <div aria-hidden="true" style={{

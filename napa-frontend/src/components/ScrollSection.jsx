@@ -19,6 +19,7 @@ export const SLIDES = [
     bgAlt:            'NAPA Chapter One dining room',
     slug:             'intimate-escape',
     navId:            'experience-intimate-escape',
+    slideKey:       'one',
   },
   {
     background:       '/images/food.webp',
@@ -37,6 +38,7 @@ export const SLIDES = [
       en:   'Visit the Chef',
       fr:   'Visiter le Chef',
     },
+    slideKey:       'six',
   },
   {
     background:       '/images/drinkb.webp',
@@ -50,6 +52,7 @@ export const SLIDES = [
     bgAlt:            'NAPA Chapter One cocktail bar',
     slug:             'crafted-cocktails',
     navId:            'experience-crafted-cocktails',
+    slideKey:       'two',
   },
   {
     background:       '/images/slimane.webp',
@@ -68,6 +71,7 @@ export const SLIDES = [
       en:   'Visit the Farm',
       fr:   'Visiter la Ferme',
     },
+    slideKey:       'three',
   },
 ]
 
