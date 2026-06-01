@@ -211,7 +211,7 @@ export default function Footer() {
               {t('footer.follow')}
             </span>
             <a
-              href="https://www.instagram.com/napachapterone"
+              href="https://www.instagram.com/napa_chapter1/"
               target="_blank" rel="noopener noreferrer"
               style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontFamily: FONT_SANS, fontSize: '11px', letterSpacing: '1.5px', color: C.cream60, textDecoration: 'none', transition: 'color 0.2s' }}
               onMouseEnter={e => { e.currentTarget.style.color = C.cream; }}
