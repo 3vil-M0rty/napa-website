@@ -1,7 +1,4 @@
 // src/components/ScrollSection.jsx
-// Desktop: original GSAP sticky-track clip-path animation (untouched)
-// Mobile:  hidden via CSS — MobileStack handles mobile presentation
-
 import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { gsap } from 'gsap'
@@ -9,7 +6,6 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 gsap.registerPlugin(ScrollTrigger)
 
-/* ─── SLIDE DATA ─────────────────────────────────────────────────────────── */
 export const SLIDES = [
   {
     background:       '/images/a1.webp',
@@ -22,6 +18,7 @@ export const SLIDES = [
     altFallback:      'Intimate candlelit dining room at NAPA Chapter One',
     bgAlt:            'NAPA Chapter One dining room',
     slug:             'intimate-escape',
+    navId:            'experience-intimate-escape',
   },
   {
     background:       '/images/food.webp',
@@ -34,6 +31,12 @@ export const SLIDES = [
     altFallback:      'Chef Driss Alaoui plating seasonal farm-to-table dishes at NAPA Chapter One',
     bgAlt:            'NAPA Chapter One kitchen',
     slug:             'kitchen-driss-alaoui',
+    navId:            'experience-kitchen-driss-alaoui',
+    externalLink: {
+      href: 'https://www.instagram.com/driss__aloui/',
+      en:   'Visit the Chef',
+      fr:   'Visiter le Chef',
+    },
   },
   {
     background:       '/images/drinkb.webp',
@@ -46,6 +49,7 @@ export const SLIDES = [
     altFallback:      'Handcrafted cocktails with Moroccan botanicals at NAPA Chapter One wine bar',
     bgAlt:            'NAPA Chapter One cocktail bar',
     slug:             'crafted-cocktails',
+    navId:            'experience-crafted-cocktails',
   },
   {
     background:       '/images/slimane.webp',
@@ -58,17 +62,19 @@ export const SLIDES = [
     altFallback:      'Sanctuary Slimane farm ingredients used in NAPA Chapter One seasonal menu',
     bgAlt:            'Sanctuary Slimane farm',
     slug:             'farm-to-table',
+    navId:            'experience-farm-to-table',
+    externalLink: {
+      href: 'https://www.sanctuaryslimane.com/',
+      en:   'Visit the Farm',
+      fr:   'Visiter la Ferme',
+    },
   },
 ]
 
-/* ─── Desktop detection ──────────────────────────────────────────────────── */
-// pointer:fine = mouse = desktop. Replaces the old window.innerWidth < 768
-// check which breaks on large tablets and touch-enabled laptops in dev.
 const IS_DESKTOP =
   typeof window !== 'undefined' &&
   window.matchMedia('(pointer: fine)').matches
 
-/* ─── JSON-LD ────────────────────────────────────────────────────────────── */
 function ExperienceSchema({ slides, t }) {
   const schema = {
     '@context': 'https://schema.org',
@@ -98,7 +104,6 @@ function ExperienceSchema({ slides, t }) {
   )
 }
 
-/* ─── CSS ────────────────────────────────────────────────────────────────── */
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500&display=swap');
 
@@ -108,9 +113,6 @@ const css = `
     font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   }
 
-  /* ════════════════════════════════════════
-     DESKTOP — sticky-track (original)
-  ════════════════════════════════════════ */
   .ss-trigger {
     height: 100vh;
     position: relative;
@@ -205,6 +207,27 @@ const css = `
     max-width: 32rem;
   }
 
+  .ss-link {
+    display: inline-block;
+    margin-top: 2rem;
+    padding: 10px 26px;
+    border: 1px solid rgba(250,246,239,0.25);
+    color: rgba(250,246,239,0.6);
+    font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 0.62rem;
+    font-weight: 500;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    text-decoration: none;
+    pointer-events: auto;
+    transition: border-color 0.3s ease, color 0.3s ease;
+  }
+
+  .ss-link:hover {
+    border-color: rgba(250,246,239,0.7);
+    color: #faf6ef;
+  }
+
   .ss-img-wrap {
     position: absolute;
     top: 0;
@@ -253,22 +276,18 @@ const css = `
     white-space: nowrap;
   }
 
-  /* Hide desktop scroll section on mobile — MobileStack takes over */
   @media (pointer: coarse) {
     .ss-wrap { display: none !important; }
   }
 `
 
-/* ─── COMPONENT ──────────────────────────────────────────────────────────── */
 export default function ScrollSection() {
   const wrapRef = useRef(null)
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
 
   useEffect(() => {
     const wrap = wrapRef.current
     if (!wrap) return
-
-    // Skip GSAP entirely on touch/mobile — section is hidden via CSS anyway
     if (!IS_DESKTOP) return
 
     const triggers = wrap.querySelectorAll('.ss-trigger')
@@ -371,6 +390,17 @@ export default function ScrollSection() {
                     <span className="ss-rule" aria-hidden="true" />
                     <h3 className="ss-title" itemProp="name">{t(s.titleKey)}</h3>
                     <p className="ss-sub" itemProp="description">{t(s.subKey)}</p>
+
+                    {s.externalLink && (
+                      <a
+                        href={s.externalLink.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ss-link"
+                      >
+                        {i18n.language === 'fr' ? s.externalLink.fr : s.externalLink.en}
+                      </a>
+                    )}
                   </div>
                   <figure className="ss-img-wrap" style={{ margin: 0 }}>
                     <div className="ss-img-shape">

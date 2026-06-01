@@ -41,6 +41,71 @@ const InstagramIcon = () => (
   </svg>
 );
 
+const ExternalIcon = () => (
+  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+    <polyline points="15 3 21 3 21 9"/>
+    <line x1="10" y1="14" x2="21" y2="3"/>
+  </svg>
+);
+
+const MapBlock = ({ isMobile }) => (
+  <div
+    onClick={() => window.open('https://maps.google.com/?q=31.635,-8.015', '_blank', 'noopener,noreferrer')}
+    style={{
+      position: 'relative',
+      overflow: 'hidden',
+      cursor: 'pointer',
+      height: isMobile ? '220px' : '100%',
+      width: '100%',
+    }}
+  >
+    <img
+      src="/images/napa_marrakech_map.svg"
+      alt="NAPA Chapter One — Gueliz, Marrakech"
+      style={{
+        position: 'absolute', inset: 0,
+        width: '100%', height: '100%',
+        objectFit: 'cover', objectPosition: 'center',
+      }}
+    />
+    <div style={{
+      position: 'absolute', inset: 0, pointerEvents: 'none',
+      background: 'linear-gradient(to right, rgba(14,12,9,0.5) 0%, transparent 40%)',
+    }} />
+    <div style={{
+      position: 'absolute',
+      bottom: '20px',
+      left: isMobile ? '20px' : '32px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '4px',
+    }}>
+      <span style={{
+        fontFamily: FONT_SANS, fontSize: '10px', fontWeight: 700,
+        letterSpacing: '3px', textTransform: 'uppercase', color: C.cream,
+      }}>
+        Gueliz, Marrakech
+      </span>
+      <span style={{
+        fontFamily: FONT_SANS, fontSize: '10px',
+        letterSpacing: '2px', textTransform: 'uppercase', color: C.cream60,
+      }}>
+        31.635°N · 8.015°W
+      </span>
+      <span style={{
+        fontFamily: FONT_SANS, fontSize: '9px',
+        letterSpacing: '2px', textTransform: 'uppercase',
+        color: C.cream30, marginTop: '6px',
+        display: 'flex', alignItems: 'center', gap: '5px',
+      }}>
+        <ExternalIcon />
+        Open in Maps
+      </span>
+    </div>
+  </div>
+);
+
 export default function Footer() {
   const { t } = useTranslation();
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
@@ -55,8 +120,8 @@ export default function Footer() {
       id="footer"
       style={{
         width: '100%',
-        height: '100vh',          // ← exact 100vh, nothing more
-        overflow: 'hidden',       // ← clip anything that overflows
+        height: isMobile ? 'auto' : '100vh',
+        overflow: 'hidden',
         position: 'relative',
         background: C.dark,
         display: 'flex',
@@ -93,21 +158,21 @@ export default function Footer() {
         background: 'linear-gradient(to bottom, rgba(14,12,9,0.55) 0%, rgba(14,12,9,0.75) 60%, rgba(14,12,9,0.92) 100%)',
       }} />
 
-      {/* ── Content: flex column fills exactly 100vh ─────────────── */}
+      {/* ── Content ──────────────────────────────────────────────── */}
       <div style={{
         position: 'relative',
         zIndex: 2,
-        flex: 1,                  // ← fill the footer height
+        flex: 1,
         display: 'flex',
         flexDirection: 'column',
-        height: '100%',
+        height: isMobile ? 'auto' : '100%',
       }}>
 
-        {/* ══ TOP: logo zone + map — takes remaining space ════════ */}
+        {/* ══ TOP: logo zone + map ════════════════════════════════ */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-          flex: 1,                // ← grows to fill space above the bottom bar
+          flex: isMobile ? 'none' : 1,
           overflow: 'hidden',
         }}>
 
@@ -117,8 +182,9 @@ export default function Footer() {
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
+            gap: isMobile ? '28px' : '0',
           }}>
-            {/* Logo landing placeholder */}
+            {/* Logo placeholder */}
             <div aria-hidden="true" style={{ width: logoWidth, aspectRatio: '3 / 1', flexShrink: 0 }} />
 
             {/* Tagline */}
@@ -142,33 +208,8 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Right — map image */}
-          {!isMobile && (
-            <div style={{ position: 'relative', overflow: 'hidden' }}>
-              <img
-                src="/images/map-napa.jpg"
-                alt="NAPA Chapter One — Gueliz, Marrakech"
-                style={{
-                  position: 'absolute', inset: 0,
-                  width: '100%', height: '100%',
-                  objectFit: 'cover', objectPosition: 'center',
-                  filter: 'sepia(0.25) brightness(0.65) contrast(1.05)',
-                }}
-              />
-              <div style={{
-                position: 'absolute', inset: 0, pointerEvents: 'none',
-                background: 'linear-gradient(to right, rgba(14,12,9,0.5) 0%, transparent 40%)',
-              }} />
-              <div style={{ position: 'absolute', bottom: '28px', left: '32px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontFamily: FONT_SANS, fontSize: '10px', fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: C.cream }}>
-                  Gueliz, Marrakech
-                </span>
-                <span style={{ fontFamily: FONT_SANS, fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', color: C.cream60 }}>
-                  31.635°N · 8.015°W
-                </span>
-              </div>
-            </div>
-          )}
+          {/* Map — desktop: right column, mobile: below left col */}
+          <MapBlock isMobile={isMobile} />
         </div>
 
         {/* ══ MIDDLE: info columns ════════════════════════════════ */}
@@ -243,7 +284,7 @@ export default function Footer() {
         <div style={{ padding: isMobile ? '0 24px' : '0 64px' }}><Rule /></div>
 
         <div style={{
-          padding: isMobile ? '16px 24px 20px' : '16px 64px 20px',
+          padding: isMobile ? '16px 24px 28px' : '16px 64px 20px',
           display: 'flex',
           flexDirection: isMobile ? 'column' : 'row',
           justifyContent: 'space-between',

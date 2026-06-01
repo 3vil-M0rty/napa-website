@@ -19,14 +19,14 @@ import {
 import { degToRad } from "three/src/math/MathUtils.js";
 import { pageAtom, pages } from "./UI";
 
-const easingFactor = 0.5; // Controls the speed of the easing
-const easingFactorFold = 0.3; // Controls the speed of the easing
-const insideCurveStrength = 0.18; // Controls the strength of the curve
-const outsideCurveStrength = 0.05; // Controls the strength of the curve
-const turningCurveStrength = 0.09; // Controls the strength of the curve
+const easingFactor = 0.5;
+const easingFactorFold = 0.3;
+const insideCurveStrength = 0.18;
+const outsideCurveStrength = 0.05;
+const turningCurveStrength = 0.09;
 
 const PAGE_WIDTH = 1.4;
-const PAGE_HEIGHT = 1.4; // 4:3 aspect ratio
+const PAGE_HEIGHT = 1.4;
 const PAGE_DEPTH = 0.003;
 const PAGE_SEGMENTS = 30;
 const SEGMENT_WIDTH = PAGE_WIDTH / PAGE_SEGMENTS;
@@ -47,15 +47,12 @@ const skinIndexes = [];
 const skinWeights = [];
 
 for (let i = 0; i < position.count; i++) {
-  // ALL VERTICES
-  vertex.fromBufferAttribute(position, i); // get the vertex
-  const x = vertex.x; // get the x position of the vertex
-
-  const skinIndex = Math.max(0, Math.floor(x / SEGMENT_WIDTH)); // calculate the skin index
-  let skinWeight = (x % SEGMENT_WIDTH) / SEGMENT_WIDTH; // calculate the skin weight
-
-  skinIndexes.push(skinIndex, skinIndex + 1, 0, 0); // set the skin indexes
-  skinWeights.push(1 - skinWeight, skinWeight, 0, 0); // set the skin weights
+  vertex.fromBufferAttribute(position, i);
+  const x = vertex.x;
+  const skinIndex = Math.max(0, Math.floor(x / SEGMENT_WIDTH));
+  let skinWeight = (x % SEGMENT_WIDTH) / SEGMENT_WIDTH;
+  skinIndexes.push(skinIndex, skinIndex + 1, 0, 0);
+  skinWeights.push(1 - skinWeight, skinWeight, 0, 0);
 }
 
 pageGeometry.setAttribute(
@@ -67,22 +64,14 @@ pageGeometry.setAttribute(
   new Float32BufferAttribute(skinWeights, 4)
 );
 
-const whiteColor = new Color("white");
-const emissiveColor = new Color("pink");
+const whiteColor = new Color("#f0ebe0");
+const emissiveColor = new Color("orange");
 
 const pageMaterials = [
-  new MeshStandardMaterial({
-    color: whiteColor,
-  }),
-  new MeshStandardMaterial({
-    color: "#111",
-  }),
-  new MeshStandardMaterial({
-    color: whiteColor,
-  }),
-  new MeshStandardMaterial({
-    color: whiteColor,
-  }),
+  new MeshStandardMaterial({ color: whiteColor, roughness: 0.9, metalness: 0 }),
+  new MeshStandardMaterial({ color: "#111", roughness: 0.9, metalness: 0 }),
+  new MeshStandardMaterial({ color: whiteColor, roughness: 0.9, metalness: 0 }),
+  new MeshStandardMaterial({ color: whiteColor, roughness: 0.9, metalness: 0 }),
 ];
 
 pages.forEach((page) => {
@@ -103,7 +92,6 @@ const Page = ({ number, front, back, page, opened, bookClosed, ...props }) => {
   const group = useRef();
   const turnedAt = useRef(0);
   const lastOpened = useRef(opened);
-
   const skinnedMeshRef = useRef();
 
   const manualSkinnedMesh = useMemo(() => {
@@ -117,7 +105,7 @@ const Page = ({ number, front, back, page, opened, bookClosed, ...props }) => {
         bone.position.x = SEGMENT_WIDTH;
       }
       if (i > 0) {
-        bones[i - 1].add(bone); // attach the new bone to the previous bone
+        bones[i - 1].add(bone);
       }
     }
     const skeleton = new Skeleton(bones);
@@ -127,30 +115,23 @@ const Page = ({ number, front, back, page, opened, bookClosed, ...props }) => {
       new MeshStandardMaterial({
         color: whiteColor,
         map: picture,
-        ...(number === 0
-          ? {
-              roughnessMap: pictureRoughness,
-            }
-          : {
-              roughness: 0.1,
-            }),
+        roughness: 0.9,
+        metalness: 0,
+        ...(number === 0 ? { roughnessMap: pictureRoughness } : {}),
         emissive: emissiveColor,
         emissiveIntensity: 0,
       }),
       new MeshStandardMaterial({
         color: whiteColor,
         map: picture2,
-        ...(number === pages.length - 1
-          ? {
-              roughnessMap: pictureRoughness,
-            }
-          : {
-              roughness: 0.1,
-            }),
+        roughness: 0.9,
+        metalness: 0,
+        ...(number === pages.length - 1 ? { roughnessMap: pictureRoughness } : {}),
         emissive: emissiveColor,
         emissiveIntensity: 0,
       }),
     ];
+
     const mesh = new SkinnedMesh(pageGeometry, materials);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
@@ -160,12 +141,8 @@ const Page = ({ number, front, back, page, opened, bookClosed, ...props }) => {
     return mesh;
   }, []);
 
-  // useHelper(skinnedMeshRef, SkeletonHelper, "red");
-
   useFrame((_, delta) => {
-    if (!skinnedMeshRef.current) {
-      return;
-    }
+    if (!skinnedMeshRef.current) return;
 
     const emissiveIntensity = highlighted ? 0.09 : 0;
     skinnedMeshRef.current.material[4].emissiveIntensity =
@@ -209,13 +186,7 @@ const Page = ({ number, front, back, page, opened, bookClosed, ...props }) => {
           foldRotationAngle = 0;
         }
       }
-      easing.dampAngle(
-        target.rotation,
-        "y",
-        rotationAngle,
-        easingFactor,
-        delta
-      );
+      easing.dampAngle(target.rotation, "y", rotationAngle, easingFactor, delta);
 
       const foldIntensity =
         i > 8
@@ -274,24 +245,16 @@ export const Book = ({ ...props }) => {
           return delayedPage;
         } else {
           timeout = setTimeout(
-            () => {
-              goToPage();
-            },
+            () => { goToPage(); },
             Math.abs(page - delayedPage) > 2 ? 50 : 150
           );
-          if (page > delayedPage) {
-            return delayedPage + 1;
-          }
-          if (page < delayedPage) {
-            return delayedPage - 1;
-          }
+          if (page > delayedPage) return delayedPage + 1;
+          if (page < delayedPage) return delayedPage - 1;
         }
       });
     };
     goToPage();
-    return () => {
-      clearTimeout(timeout);
-    };
+    return () => { clearTimeout(timeout); };
   }, [page]);
 
   return (

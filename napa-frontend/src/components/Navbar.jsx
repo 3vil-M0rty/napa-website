@@ -12,12 +12,8 @@ const LANGUAGES = [
   { code: 'fr', label: 'FR' },
 ]
 
-// cream60 from footer — the color the logo shifts to at footer
 const LOGO_FOOTER_COLOR = 'rgba(250,246,239,0.6)'
-const LOGO_TOP_COLOR    = 'white'
-
-// The threshold that triggers BOTH the logo color change AND the nav hide
-// Must match the atFooter check exactly
+const LOGO_TOP_COLOR = 'white'
 const FOOTER_THRESHOLD = 0.055
 
 function getIsMobile() {
@@ -27,31 +23,25 @@ function getIsMobile() {
 function scrollToSection(id) {
   const el = document.getElementById(id)
   if (!el) return
-  window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' })
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 function Hairline({ hidden }) {
   return (
     <span style={{
-      display: 'inline-block',
-      width: '1px',
-      height: '14px',
-      background: 'white',
-      flexShrink: 0,
-      opacity: hidden ? 0 : 0.4,
-      transition: 'opacity 0.4s ease',
+      display: 'inline-block', width: '1px', height: '14px',
+      background: 'white', flexShrink: 0,
+      opacity: hidden ? 0 : 0.4, transition: 'opacity 0.4s ease',
     }} />
   )
 }
 
 function EditorialNavLink({ target, children, hidden }) {
   const underlineRef = useRef(null)
-
   const resetUnderline = () => {
     if (!underlineRef.current) return
     gsap.set(underlineRef.current, { scaleX: 0, transformOrigin: 'left' })
   }
-
   const handleEnter = () => {
     if (!underlineRef.current) return
     gsap.killTweensOf(underlineRef.current)
@@ -60,29 +50,22 @@ function EditorialNavLink({ target, children, hidden }) {
       { scaleX: 1, duration: 0.38, ease: 'power3.out' }
     )
   }
-
   const handleLeave = () => {
     if (!underlineRef.current) return
     gsap.killTweensOf(underlineRef.current)
     gsap.to(underlineRef.current, {
-      scaleX: 0,
-      transformOrigin: 'right',
-      duration: 0.28,
-      ease: 'power3.inOut',
-      onComplete: resetUnderline,
+      scaleX: 0, transformOrigin: 'right',
+      duration: 0.28, ease: 'power3.inOut', onComplete: resetUnderline,
     })
   }
-
   useEffect(() => { resetUnderline() }, [])
-
   return (
     <button
       onClick={() => scrollToSection(target)}
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
       style={{
-        all: 'unset',
-        cursor: 'pointer',
+        all: 'unset', cursor: 'pointer',
         opacity: hidden ? 0 : 1,
         transform: hidden ? 'translateY(-4px)' : 'translateY(0)',
         transition: 'opacity 0.4s ease, transform 0.4s ease',
@@ -90,50 +73,36 @@ function EditorialNavLink({ target, children, hidden }) {
       }}
     >
       <span style={{
-        position: 'relative',
-        display: 'inline-block',
-        fontSize: '10px',
-        fontWeight: 600,
-        letterSpacing: '3px',
-        textTransform: 'uppercase',
-        color: 'white',
-        padding: '4px 0',
-        userSelect: 'none',
-        whiteSpace: 'nowrap',
+        position: 'relative', display: 'inline-block',
+        fontSize: '10px', fontWeight: 600, letterSpacing: '3px',
+        textTransform: 'uppercase', color: 'white',
+        padding: '4px 0', userSelect: 'none', whiteSpace: 'nowrap',
       }}>
         {children}
-        <span
-          ref={underlineRef}
-          style={{
-            position: 'absolute',
-            bottom: 0, left: 0, right: 0,
-            height: '1px',
-            background: 'white',
-            transform: 'scaleX(0)',
-            transformOrigin: 'left',
-          }}
-        />
+        <span ref={underlineRef} style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0,
+          height: '1px', background: 'white',
+          transform: 'scaleX(0)', transformOrigin: 'left',
+        }} />
       </span>
     </button>
   )
 }
 
-function MobileNavLink({ target, children, onClick }) {
+function MobileNavLink({ target, children, onNavigate, onClose }) {
+  const handleClick = () => {
+    onNavigate(target)
+    onClose()
+  }
   return (
     <button
-      onClick={() => { scrollToSection(target); onClick?.() }}
+      onClick={handleClick}
       style={{
-        all: 'unset',
-        display: 'block',
-        width: '100%',
-        padding: '18px 0',
-        borderBottom: '1px solid rgba(246,237,227,0.08)',
-        textAlign: 'center',
-        cursor: 'pointer',
-        fontSize: '11px',
-        letterSpacing: '3px',
-        textTransform: 'uppercase',
-        color: '#f6ede3',
+        all: 'unset', display: 'block', width: '100%',
+        padding: '18px 0', borderBottom: '1px solid rgba(246,237,227,0.08)',
+        textAlign: 'center', cursor: 'pointer',
+        fontSize: '11px', letterSpacing: '3px',
+        textTransform: 'uppercase', color: '#f6ede3',
       }}
     >
       {children}
@@ -144,10 +113,8 @@ function MobileNavLink({ target, children, onClick }) {
 function LangSwitch({ hidden, i18n, changeLanguage }) {
   return (
     <div style={{
-      display: 'flex',
-      gap: '14px',
-      opacity: hidden ? 0 : 1,
-      transition: 'opacity 0.4s ease',
+      display: 'flex', gap: '14px',
+      opacity: hidden ? 0 : 1, transition: 'opacity 0.4s ease',
       pointerEvents: hidden ? 'none' : 'auto',
     }}>
       {LANGUAGES.map(lang => (
@@ -155,12 +122,9 @@ function LangSwitch({ hidden, i18n, changeLanguage }) {
           key={lang.code}
           onClick={() => changeLanguage(lang.code)}
           style={{
-            all: 'unset',
-            cursor: 'pointer',
-            fontSize: '10px',
-            letterSpacing: '3px',
-            textTransform: 'uppercase',
-            color: 'white',
+            all: 'unset', cursor: 'pointer',
+            fontSize: '10px', letterSpacing: '3px',
+            textTransform: 'uppercase', color: 'white',
             opacity: i18n.language === lang.code ? 1 : 0.55,
           }}
         >
@@ -180,6 +144,9 @@ export default function Navbar() {
   const [atFooter, setAtFooter] = useState(false)
   const logoRef = useRef(null)
 
+  const pendingScrollTarget = useRef(null)
+  const savedScrollY = useRef(0)  // ← captures scroll before fixed is applied
+
   const logoWidth = isMobile
     ? 'clamp(120px, 34vw, 160px)'
     : 'clamp(180px, 14vw, 240px)'
@@ -196,52 +163,82 @@ export default function Navbar() {
     if (!isMobile) return
     const body = document.body
     const html = document.documentElement
+
     if (menuOpen) {
-      const scrollY = window.scrollY
-      body.dataset.scrollY = String(scrollY)
+      savedScrollY.current = window.scrollY
+      const scrollY = savedScrollY.current
+
       body.style.position = 'fixed'
       body.style.top = `-${scrollY}px`
-      body.style.left = '0'; body.style.right = '0'
-      body.style.width = '100%'; body.style.overflow = 'hidden'
-      html.style.overflow = 'hidden'; html.style.touchAction = 'none'
+      body.style.left = '0'
+      body.style.right = '0'
+      body.style.width = '100%'
+      body.style.overflow = 'hidden'
+      html.style.overflow = 'hidden'
+      html.style.touchAction = 'none'
+
     } else {
-      const scrollY = parseInt(body.dataset.scrollY || '0', 10)
-      body.style.position = ''; body.style.top = ''
-      body.style.left = ''; body.style.right = ''
-      body.style.width = ''; body.style.overflow = ''
-      html.style.overflow = ''; html.style.touchAction = ''
-      window.scrollTo(0, scrollY)
+      const scrollY = savedScrollY.current
+
+      body.style.position = ''
+      body.style.top = ''
+      body.style.left = ''
+      body.style.right = ''
+      body.style.width = ''
+      body.style.overflow = ''
+      html.style.overflow = ''
+      html.style.touchAction = ''
+
+      const target = pendingScrollTarget.current
+      pendingScrollTarget.current = null
+
+
+      if (target) {
+        window.scrollTo(0, scrollY)
+        setTimeout(() => {
+          const el = document.getElementById(target)
+          if (!el) return
+
+          let stickySlide = el
+          while (stickySlide && !stickySlide.classList.contains('mbs3-slide')) {
+            stickySlide = stickySlide.parentElement
+          }
+
+          let top = 0
+          let node = stickySlide || el
+          while (node) {
+            top += node.offsetTop || 0
+            node = node.offsetParent
+          }
+
+          window.scrollTo({ top, behavior: 'smooth' })
+        }, 350) // just longer than the exit animation duration
+      }
     }
+
     return () => {
-      body.style.position = ''; body.style.top = ''
-      body.style.left = ''; body.style.right = ''
-      body.style.width = ''; body.style.overflow = ''
-      html.style.overflow = ''; html.style.touchAction = ''
+      body.style.position = ''
+      body.style.top = ''
+      body.style.left = ''
+      body.style.right = ''
+      body.style.width = ''
+      body.style.overflow = ''
+      html.style.overflow = ''
+      html.style.touchAction = ''
     }
   }, [menuOpen, isMobile])
-
-  /* ── Single scroll listener — drives BOTH atFooter state AND logo color ── */
   useEffect(() => {
     const logo = logoRef.current
-
     const handleScroll = () => {
       const footer = document.getElementById('footer')
       if (!footer) return
       const rect = footer.getBoundingClientRect()
-
-      // Same threshold for both nav hide and logo color change
       const isAtFooter = rect.top <= window.innerHeight * FOOTER_THRESHOLD
-
       setAtFooter(isAtFooter)
-
-      // Logo color via CSS filter — no position animation at all
-      if (logo) {
-        logo.style.color = isAtFooter ? LOGO_FOOTER_COLOR : LOGO_TOP_COLOR
-      }
+      if (logo) logo.style.color = isAtFooter ? LOGO_FOOTER_COLOR : LOGO_TOP_COLOR
     }
-
     window.addEventListener('scroll', handleScroll, { passive: true })
-    handleScroll() // run once on mount
+    handleScroll()
     return () => window.removeEventListener('scroll', handleScroll)
   }, [isMobile])
 
@@ -252,49 +249,34 @@ export default function Navbar() {
   }
 
   const NAV_LINKS = [
-    { label: t('nav.estate', 'Estate'),        target: 'experience-intimate-escape' },
-    { label: t('nav.cellar', 'Cellar'),         target: 'experience-crafted-cocktails' },
-    { label: t('nav.journal', 'Journal'),       target: 'experience-farm-to-table' },
-    { label: t('nav.reservations', 'Reserve'),  target: 'experience-kitchen-driss-alaoui' },
+    { label: t('theRoom'), target: 'experience-intimate-escape' },
+    { label: t('kitchen'), target: 'experience-kitchen-driss-alaoui' },
+    { label: t('bar'), target: 'experience-crafted-cocktails' },
+    { label: t('farm'), target: 'experience-farm-to-table' },
   ]
 
   return (
     <>
-      {/* LOGO — fixed position, color transition via CSS, no GSAP movement */}
       <Link
         to="/"
         style={{
           position: 'fixed',
           top: isMobile ? '0.6rem' : '1.5rem',
           left: isMobile ? '0.6rem' : '1.5rem',
-          zIndex: 102,
-          textDecoration: 'none',
+          zIndex: 102, textDecoration: 'none',
         }}
       >
-        <div
-          ref={logoRef}
-          style={{
-            color: LOGO_TOP_COLOR,
-            // CSS transition handles the color change smoothly
-            transition: 'color 0.4s ease',
-            willChange: 'color',
-          }}
-        >
+        <div ref={logoRef} style={{ color: LOGO_TOP_COLOR, transition: 'color 0.4s ease', willChange: 'color' }}>
           <NapaCo style={{ width: logoWidth, height: 'auto', display: 'block' }} />
         </div>
       </Link>
 
-      {/* NAV */}
       <motion.nav
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         style={{
-          position: 'fixed',
-          top: 0,
-          width: '100%',
-          zIndex: 100,
-          display: 'flex',
-          justifyContent: 'flex-end',
+          position: 'fixed', top: 0, width: '100%', zIndex: 100,
+          display: 'flex', justifyContent: 'flex-end',
           padding: isMobile ? '1rem' : '1.25rem 2rem',
           pointerEvents: 'none',
         }}
@@ -315,27 +297,22 @@ export default function Navbar() {
           <button
             onClick={() => setMenuOpen(v => !v)}
             style={{
-              all: 'unset',
-              width: '28px', height: '22px',
-              position: 'relative',
-              cursor: 'pointer',
+              all: 'unset', width: '28px', height: '22px',
+              position: 'relative', cursor: 'pointer',
               pointerEvents: atFooter && !menuOpen ? 'none' : 'auto',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              opacity: atFooter && !menuOpen ? 0 : 1,
-              transition: 'opacity 0.4s ease',
+              opacity: atFooter && !menuOpen ? 0 : 1, transition: 'opacity 0.4s ease',
             }}
           >
             <span style={{
               position: 'absolute', width: '100%', height: '1.5px',
-              background: menuOpen ? '#f6ede3' : 'white',
-              borderRadius: '999px',
+              background: menuOpen ? '#f6ede3' : 'white', borderRadius: '999px',
               transform: menuOpen ? 'rotate(45deg)' : 'translateY(-6px)',
               transition: 'transform .45s cubic-bezier(.22,.61,.36,1), background .35s ease',
             }} />
             <span style={{
               position: 'absolute', width: '100%', height: '1.5px',
-              background: menuOpen ? '#f6ede3' : 'white',
-              borderRadius: '999px',
+              background: menuOpen ? '#f6ede3' : 'white', borderRadius: '999px',
               transform: menuOpen ? 'rotate(-45deg)' : 'translateY(6px)',
               transition: 'transform .45s cubic-bezier(.22,.61,.36,1), background .35s ease',
             }} />
@@ -343,7 +320,6 @@ export default function Navbar() {
         )}
       </motion.nav>
 
-      {/* MOBILE MENU */}
       <AnimatePresence>
         {isMobile && menuOpen && (
           <motion.div
@@ -353,13 +329,17 @@ export default function Navbar() {
             style={{
               position: 'fixed', inset: 0,
               background: 'rgba(58,5,5,0.985)',
-              zIndex: 99,
-              display: 'flex', flexDirection: 'column',
+              zIndex: 99, display: 'flex', flexDirection: 'column',
               justifyContent: 'center', alignItems: 'center',
             }}
           >
             {NAV_LINKS.map(link => (
-              <MobileNavLink key={link.target} target={link.target} onClick={() => setMenuOpen(false)}>
+              <MobileNavLink
+                key={link.target}
+                target={link.target}
+                onNavigate={(id) => { pendingScrollTarget.current = id }}
+                onClose={() => setMenuOpen(false)}
+              >
                 {link.label}
               </MobileNavLink>
             ))}

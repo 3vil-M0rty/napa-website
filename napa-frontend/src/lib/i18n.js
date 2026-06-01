@@ -194,6 +194,10 @@ const resources = {
         sable_etoile_name: "Stardust",
         sable_etoile_desc: "Tequila · Agave · Pineapple",
       },
+      theRoom: 'The Room',
+      kitchen: 'Kitchen',
+      bar: 'The Bar',
+      farm: 'The Farm',
     },
   },
 
@@ -387,9 +391,12 @@ const resources = {
         sable_etoile_name: "Sable de l'Étoile",
         sable_etoile_desc: "Tequila · Agave · Ananas",
       },
-
+      theRoom: 'La Salle',
+      kitchen: 'La Cuisine',
+      bar: 'Le Bar',
+      farm: 'La Ferme',
     },
-  },
+},
 }
 
 i18next
