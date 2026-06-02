@@ -8,70 +8,70 @@ gsap.registerPlugin(ScrollTrigger)
 
 export const SLIDES = [
   {
-    background:       '/images/a1.webp',
+    background: '/images/a1.webp',
     mobileBackground: '/images/a1.webp',
-    titleKey:         'experience.slides.one.title',
-    subKey:           'experience.slides.one.sub',
-    img:              '/images/a0.webp',
-    mobileImg:        '/images/a0.webp',
-    altKey:           'experience.slides.one.imgAlt',
-    altFallback:      'Intimate candlelit dining room at NAPA Chapter One',
-    bgAlt:            'NAPA Chapter One dining room',
-    slug:             'intimate-escape',
-    navId:            'experience-intimate-escape',
-    slideKey:       'one',
+    titleKey: 'experience.slides.one.title',
+    subKey: 'experience.slides.one.sub',
+    img: '/images/a0.webp',
+    mobileImg: '/images/a0.webp',
+    altKey: 'experience.slides.one.imgAlt',
+    altFallback: 'Intimate candlelit dining room at NAPA Chapter One',
+    bgAlt: 'NAPA Chapter One dining room',
+    slug: 'intimate-escape',
+    navId: 'experience-intimate-escape',
+    slideKey: 'one',
   },
   {
-    background:       '/images/food.webp',
+    background: '/images/food.webp',
     mobileBackground: '/images/food.webp',
-    titleKey:         'experience.slides.six.title',
-    subKey:           'experience.slides.six.sub',
-    img:              '/images/chef.webp',
-    mobileImg:        '/images/chef.webp',
-    altKey:           'experience.slides.six.imgAlt',
-    altFallback:      'Chef Driss Alaoui plating seasonal farm-to-table dishes at NAPA Chapter One',
-    bgAlt:            'NAPA Chapter One kitchen',
-    slug:             'kitchen-driss-alaoui',
-    navId:            'experience-kitchen-driss-alaoui',
+    titleKey: 'experience.slides.six.title',
+    subKey: 'experience.slides.six.sub',
+    img: '/images/chef.webp',
+    mobileImg: '/images/chef.webp',
+    altKey: 'experience.slides.six.imgAlt',
+    altFallback: 'Chef Driss Alaoui plating seasonal farm-to-table dishes at NAPA Chapter One',
+    bgAlt: 'NAPA Chapter One kitchen',
+    slug: 'kitchen-driss-alaoui',
+    navId: 'experience-kitchen-driss-alaoui',
     externalLink: {
       href: 'https://www.instagram.com/driss__aloui/',
-      en:   'Visit the Chef',
-      fr:   'Visiter le Chef',
+      en: 'Visit the Chef',
+      fr: 'Visiter le Chef',
     },
-    slideKey:       'six',
+    slideKey: 'six',
   },
   {
-    background:       '/images/drinkb.webp',
+    background: '/images/drinkb.webp',
     mobileBackground: '/images/drinkb.webp',
-    titleKey:         'experience.slides.two.title',
-    subKey:           'experience.slides.two.sub',
-    img:              '/images/drinks.webp',
-    mobileImg:        '/images/drinks.webp',
-    altKey:           'experience.slides.two.imgAlt',
-    altFallback:      'Handcrafted cocktails with Moroccan botanicals at NAPA Chapter One wine bar',
-    bgAlt:            'NAPA Chapter One cocktail bar',
-    slug:             'crafted-cocktails',
-    navId:            'experience-crafted-cocktails',
-    slideKey:       'two',
+    titleKey: 'experience.slides.two.title',
+    subKey: 'experience.slides.two.sub',
+    img: '/images/drinks.webp',
+    mobileImg: '/images/drinks.webp',
+    altKey: 'experience.slides.two.imgAlt',
+    altFallback: 'Handcrafted cocktails with Moroccan botanicals at NAPA Chapter One wine bar',
+    bgAlt: 'NAPA Chapter One cocktail bar',
+    slug: 'crafted-cocktails',
+    navId: 'experience-crafted-cocktails',
+    slideKey: 'two',
   },
   {
-    background:       '/images/slimane.webp',
+    background: '/images/slimane.webp',
     mobileBackground: '/images/slimane.webp',
-    titleKey:         'experience.slides.three.title',
-    subKey:           'experience.slides.three.sub',
-    img:              '/images/slima.webp',
-    mobileImg:        '/images/slima.webp',
-    altKey:           'experience.slides.three.imgAlt',
-    altFallback:      'Sanctuary Slimane farm ingredients used in NAPA Chapter One seasonal menu',
-    bgAlt:            'Sanctuary Slimane farm',
-    slug:             'farm-to-table',
-    navId:            'experience-farm-to-table',
+    titleKey: 'experience.slides.three.title',
+    subKey: 'experience.slides.three.sub',
+    img: '/images/slima.webp',
+    mobileImg: '/images/slima.webp',
+    altKey: 'experience.slides.three.imgAlt',
+    altFallback: 'Sanctuary Slimane farm ingredients used in NAPA Chapter One seasonal menu',
+    bgAlt: 'Sanctuary Slimane farm',
+    slug: 'farm-to-table',
+    navId: 'experience-farm-to-table',
     externalLink: {
       href: 'https://www.sanctuaryslimane.com/',
-      en:   'Visit the Farm',
-      fr:   'Visiter la Ferme',
+      en: 'Visit the Farm',
+      fr: 'Visiter la Ferme',
     },
-    slideKey:       'three',
+    slideKey: 'three',
   },
 ]
 
@@ -259,9 +259,6 @@ const css = `
   }
 
   .ss-counter {
-    position: absolute;
-    bottom: 2.4rem;
-    left: 6rem;
     font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size: 0.62rem;
     font-weight: 500;
@@ -279,7 +276,17 @@ const css = `
     clip: rect(0 0 0 0);
     white-space: nowrap;
   }
-
+  .ss-trigger:last-child::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(to bottom, transparent 0%, #0a0a0a 100%);
+  pointer-events: none;
+  z-index: 105;
+}
   @media (pointer: coarse) {
     .ss-wrap { display: none !important; }
   }
@@ -295,12 +302,12 @@ export default function ScrollSection() {
     if (!IS_DESKTOP) return
 
     const triggers = wrap.querySelectorAll('.ss-trigger')
-    const items    = wrap.querySelectorAll('.ss-item')
+    const items = wrap.querySelectorAll('.ss-item')
 
     const ctx = gsap.context(() => {
       triggers.forEach((trigger, i) => {
-        const bg       = trigger.querySelector('.ss-bg')
-        const item     = items[i]
+        const bg = trigger.querySelector('.ss-bg')
+        const item = items[i]
         if (!item) return
         const shapeImg = item.querySelector('.ss-img-shape img')
 
@@ -370,7 +377,7 @@ export default function ScrollSection() {
 
         <div style={{ position: 'relative' }} aria-hidden="true">
           {SLIDES.map((s, i) => (
-            <div key={i} className="ss-trigger" id={`experience-${s.slug}`}>
+            <div key={i} className="ss-trigger" id={`desktop-${s.slug}`}>
               <img
                 src={s.background}
                 className="ss-bg"
@@ -421,15 +428,20 @@ export default function ScrollSection() {
                       {t(s.altKey, s.altFallback)} — {t(s.subKey)}
                     </figcaption>
                   </figure>
-                  <span className="ss-counter" aria-hidden="true">
-                    {String(i + 1).padStart(2, '0')} — {t(s.titleKey).toUpperCase()}
-                  </span>
                 </article>
               ))}
             </div>
           </div>
         </div>
       </section>
+      <div style={{
+      marginTop: '-25vh',
+      height: '25vh',
+      background: 'linear-gradient(to bottom, transparent 0%, #000000 60%)',
+      pointerEvents: 'none',
+      position: 'relative',
+      zIndex: 10,
+    }} />
     </>
   )
 }

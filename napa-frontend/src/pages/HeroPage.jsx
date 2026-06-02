@@ -466,7 +466,42 @@ export default function HeroPage() {
   const scrollProgress = useRef(0)
   const { t, i18n } = useTranslation()
   const lang = i18n.language === 'fr' ? 'fr' : 'en'
+  const titleRef = useRef(null)
+  const titleFoodRef = useRef(null)
 
+  useEffect(() => {
+    const el = titleRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          el.style.opacity = '1'
+          el.style.transform = 'translateY(0)'
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.3 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const el = titleFoodRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          el.style.opacity = '1'
+          el.style.transform = 'translateY(0)'
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.3 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
   return (
     <>
       <Helmet>
@@ -528,15 +563,86 @@ export default function HeroPage() {
           alignItems: 'center',
           gap: '32px',
         }}>
+          <h1
+            ref={titleRef}
+            style={{
+              fontFamily: "'Cormorant Garamond', 'Cormorant', Georgia, 'Times New Roman', serif",
+              fontSize: 'clamp(2.4rem, 4.2vw, 4rem)',
+              fontWeight: 600,
+              fontStyle: 'italic',
+              lineHeight: 1.08,
+              letterSpacing: '-0.01em',
+              color: '#faf6ef',
+              margin: 0,
+              opacity: 0,
+              transform: 'translateY(24px)',
+              transition: 'opacity 0.8s ease, transform 0.8s ease',
+            }}
+          >
+            {t('hero.titleDrinks')}
+          </h1>
           <Masonry
             items={[
-              { id: "1", img: "/images/cocktail1.webp", height: 400, name: t('cocktails.rouge_velours_name'), description: t('cocktails.rouge_velours_desc') },
-              { id: "2", img: "/images/cocktail2.webp", height: 250, name: t('cocktails.jardin_hiver_name'), description: t('cocktails.jardin_hiver_desc') },
-              { id: "3", img: "/images/cocktail3.webp", height: 600, name: t('cocktails.soleil_marrakech_name'), description: t('cocktails.soleil_marrakech_desc') },
-              { id: "4", img: "/images/cocktail4.webp", height: 350, name: t('cocktails.nuit_noire_name'), description: t('cocktails.nuit_noire_desc') },
-              { id: "5", img: "/images/cocktail5.webp", height: 450, name: t('cocktails.aube_doree_name'), description: t('cocktails.aube_doree_desc') },
-              { id: "6", img: "/images/cocktail3.webp", height: 500, name: t('cocktails.sable_etoile_name'), description: t('cocktails.sable_etoile_desc') },
-              { id: "7", img: "/images/cocktail4.webp", height: 350, name: t('cocktails.nuit_noire_name'), description: t('cocktails.nuit_noire_desc') },
+              { id: "1", img: "/images/cocktail1.webp", height: 500, name: t('cocktails.rouge_velours_name'), description: t('cocktails.rouge_velours_desc') },
+              { id: "2", img: "/images/cocktail2.webp", height: 1000, name: t('cocktails.jardin_hiver_name'), description: t('cocktails.jardin_hiver_desc') },
+              { id: "3", img: "/images/cocktail3.webp", height: 500, name: t('cocktails.soleil_marrakech_name'), description: t('cocktails.soleil_marrakech_desc') },
+              { id: "4", img: "/images/cocktail4.webp", height: 1000, name: t('cocktails.nuit_noire_name'), description: t('cocktails.nuit_noire_desc') },
+              { id: "5", img: "/images/cocktail5.webp", height: 500, name: t('cocktails.aube_doree_name'), description: t('cocktails.aube_doree_desc') },
+              { id: "6", img: "/images/cocktail3.webp", height: 1000, name: t('cocktails.sable_etoile_name'), description: t('cocktails.sable_etoile_desc') },
+              { id: "7", img: "/images/cocktail4.webp", height: 500, name: t('cocktails.nuit_noire_name'), description: t('cocktails.nuit_noire_desc') },
+              { id: "8", img: "/images/cocktail5.webp", height: 1000, name: t('cocktails.aube_doree_name'), description: t('cocktails.aube_doree_desc') },
+              { id: "9", img: "/images/cocktail5.webp", height: 500, name: t('cocktails.aube_doree_name'), description: t('cocktails.aube_doree_desc') },
+              { id: "10", img: "/images/cocktail3.webp", height: 1000, name: t('cocktails.sable_etoile_name'), description: t('cocktails.sable_etoile_desc') },
+              { id: "11", img: "/images/cocktail4.webp", height: 500, name: t('cocktails.nuit_noire_name'), description: t('cocktails.nuit_noire_desc') },
+              { id: "12", img: "/images/cocktail5.webp", height: 1000, name: t('cocktails.aube_doree_name'), description: t('cocktails.aube_doree_desc') },
+            ]}
+            colorShiftOnHover={false}
+          />
+          <OpenBookButton />
+        </div>
+        <div style={{
+          width: '100%',
+          height: 'auto',        // FIX 2: was '100vh', now grows to fit all cards
+          minHeight: '100vh',    // FIX 2: still fills screen when content is short
+          background: 'black',
+          padding: '0 1rem 60px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '32px',
+        }}>
+          <h1
+            ref={titleFoodRef}
+            style={{
+              fontFamily: "'Cormorant Garamond', 'Cormorant', Georgia, 'Times New Roman', serif",
+              fontSize: 'clamp(2.4rem, 4.2vw, 4rem)',
+              fontWeight: 600,
+              fontStyle: 'italic',
+              lineHeight: 1.08,
+              letterSpacing: '-0.01em',
+              color: '#faf6ef',
+              margin: 0,
+              opacity: 0,
+              transform: 'translateY(24px)',
+              transition: 'opacity 0.8s ease, transform 0.8s ease',
+            }}
+          >
+            {t('hero.titleFood')}
+          </h1>
+          <Masonry
+            items={[
+              { id: "1", img: "/images/food1.webp", height: 500, name: t('food.plate_one_name'), description: t('food.plate_one_desc') },
+              { id: "2", img: "/images/food2.webp", height: 1000, name: t('food.plate_two_name'), description: t('food.plate_two_desc') },
+              { id: "3", img: "/images/food3.webp", height: 500, name: t('food.plate_three_name'), description: t('food.plate_three_desc') },
+              { id: "4", img: "/images/food4.webp", height: 1000, name: t('food.plate_four_name'), description: t('food.plate_four_desc') },
+              { id: "5", img: "/images/food5.webp", height: 500, name: t('food.plate_five_name'), description: t('food.plate_five_desc') },
+              { id: "6", img: "/images/food6.webp", height: 1000, name: t('food.plate_six_name'), description: t('food.plate_six_desc') },
+              { id: "7", img: "/images/food7.webp", height: 500, name: t('food.plate_seven_name'), description: t('food.plate_seven_desc') },
+              { id: "8", img: "/images/food8.webp", height: 1000, name: t('food.plate_eight_name'), description: t('food.plate_eight_desc') },
+              { id: "9", img: "/images/food1.webp", height: 500, name: t('food.plate_nine_name'), description: t('food.plate_nine_desc') },
+              { id: "10", img: "/images/food4.webp", height: 1000, name: t('food.plate_ten_name'), description: t('food.plate_ten_desc') },
+              { id: "11", img: "/images/food6.webp", height: 500, name: t('food.plate_eleven_name'), description: t('food.plate_eleven_desc') },
+              { id: "12", img: "/images/food3.webp", height: 1000, name: t('food.plate_twelve_name'), description: t('food.plate_twelve_desc') },
             ]}
             colorShiftOnHover={false}
           />

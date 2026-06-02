@@ -21,7 +21,8 @@ function getIsMobile() {
 }
 
 function scrollToSection(id) {
-  const el = document.getElementById(id)
+  const desktopId = 'desktop-' + id.replace('experience-', '')
+  const el = document.getElementById(desktopId)
   if (!el) return
   el.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }

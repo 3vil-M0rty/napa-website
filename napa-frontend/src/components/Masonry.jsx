@@ -40,10 +40,10 @@ const preloadImages = async urls => {
 };
 
 const FONT_SERIF = "'Cormorant Garamond', 'Cormorant', Georgia, 'Times New Roman', serif";
-const FONT_SANS  = "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif";
-const WINE_RED   = '#8b1d1f';
-const CREAM      = '#faf6ef';
-const CREAM60    = 'rgba(250,246,239,0.6)';
+const FONT_SANS = "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif";
+const WINE_RED = '#8b1d1f';
+const CREAM = '#faf6ef';
+const CREAM60 = 'rgba(250,246,239,0.6)';
 
 const DrinkOverlay = ({ name, description, visible }) => (
   <div
@@ -136,12 +136,12 @@ const Masonry = ({
       direction = dirs[Math.floor(Math.random() * dirs.length)];
     }
     switch (direction) {
-      case 'top':    return { x: item.x, y: -200 };
+      case 'top': return { x: item.x, y: -200 };
       case 'bottom': return { x: item.x, y: window.innerHeight + 200 };
-      case 'left':   return { x: -200, y: item.y };
-      case 'right':  return { x: window.innerWidth + 200, y: item.y };
+      case 'left': return { x: -200, y: item.y };
+      case 'right': return { x: window.innerWidth + 200, y: item.y };
       case 'center': return { x: containerRect.width / 2 - item.w / 2, y: containerRect.height / 2 - item.h / 2 };
-      default:       return { x: item.x, y: item.y + 100 };
+      default: return { x: item.x, y: item.y + 100 };
     }
   };
 
@@ -150,54 +150,95 @@ const Masonry = ({
   }, [items]);
 
   const grid = useMemo(() => {
-    if (!width) return [];
-    const colHeights = new Array(columns).fill(0);
-    const columnWidth = width / columns;
-    return items.map(child => {
-      const col = colHeights.indexOf(Math.min(...colHeights));
-      const x = columnWidth * col;
-      const height = child.height / 2;
-      const y = colHeights[col];
-      colHeights[col] += height;
-      return { ...child, x, y, w: columnWidth, h: height };
-    });
-  }, [columns, items, width]);
+  if (!width) return [];
+  const columnWidth = width / columns;
+  const colHeights = new Array(columns).fill(0);
 
-  // FIX 3: compute total height from the grid so .list grows to fit all cards
+  const heightPatterns = [
+    window.innerHeight * 0.30,
+    window.innerHeight * 0.40,
+    window.innerHeight * 0.30,
+  ];
+
+  // each column starts at a different index in the pattern
+  const colOffsets = [0, 1, 2, 0]; // col0 starts at h1, col1 at h2, col2 at h3, col3 at h1
+
+  return items.map((child, index) => {
+    const col = index % columns;
+    const itemIndexInCol = Math.floor(index / columns);
+    const patternIndex = (colOffsets[col] + itemIndexInCol) % heightPatterns.length;
+    const height = heightPatterns[patternIndex];
+
+    const x = columnWidth * col;
+    const y = colHeights[col];
+    colHeights[col] += height;
+
+    return { ...child, x, y, w: columnWidth, h: height };
+  });
+}, [columns, items, width]);
+
   const totalHeight = useMemo(() => {
     if (!grid.length) return 0;
     return Math.max(...grid.map(item => item.y + item.h));
   }, [grid]);
 
   const hasMounted = useRef(false);
+  const hasAnimated = useRef(false);
 
   useLayoutEffect(() => {
     if (!imagesReady) return;
-    grid.forEach((item, index) => {
-      const selector = `[data-key="${item.id}"]`;
-      const animationProps = { x: item.x, y: item.y, width: item.w, height: item.h };
-      if (!hasMounted.current) {
-        const initialPos = getInitialPosition(item);
-        gsap.fromTo(selector, {
-          opacity: 0,
-          x: initialPos.x,
-          y: initialPos.y,
-          width: item.w,
-          height: item.h,
-          ...(blurToFocus && { filter: 'blur(10px)' }),
-        }, {
-          opacity: 1,
-          ...animationProps,
-          ...(blurToFocus && { filter: 'blur(0px)' }),
-          duration: 0.8,
-          ease: 'power3.out',
-          delay: index * stagger,
-        });
-      } else {
-        gsap.to(selector, { ...animationProps, duration, ease, overwrite: 'auto' });
-      }
-    });
-    hasMounted.current = true;
+
+    const container = containerRef.current;
+    if (!container) return;
+
+    const runAnimation = () => {
+      grid.forEach((item, index) => {
+        const selector = `[data-key="${item.id}"]`;
+        const animationProps = { x: item.x, y: item.y, width: item.w, height: item.h };
+
+        if (!hasMounted.current) {
+          const initialPos = getInitialPosition(item);
+          gsap.fromTo(selector, {
+            opacity: 0,
+            x: initialPos.x,
+            y: initialPos.y,
+            width: item.w,
+            height: item.h,
+            ...(blurToFocus && { filter: 'blur(10px)' }),
+          }, {
+            opacity: 1,
+            ...animationProps,
+            ...(blurToFocus && { filter: 'blur(0px)' }),
+            duration: 0.8,
+            ease: 'power3.out',
+            delay: index * stagger,
+          });
+        } else {
+          gsap.to(selector, { ...animationProps, duration, ease, overwrite: 'auto' });
+        }
+      });
+      hasMounted.current = true;
+    };
+
+    if (hasAnimated.current) {
+      runAnimation();
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          hasAnimated.current = true;
+          runAnimation();
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(container);
+    return () => observer.disconnect();
+
   }, [grid, imagesReady, stagger, animateFrom, blurToFocus, duration, ease]);
 
   const handleMouseEnter = (e, item) => {
@@ -215,7 +256,6 @@ const Masonry = ({
   };
 
   return (
-    // FIX 3: height driven by computed totalHeight, not 100%
     <div ref={containerRef} className="list" style={{ height: totalHeight || undefined }}>
       {grid.map(item => (
         <div

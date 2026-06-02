@@ -26,6 +26,8 @@ const resources = {
 
       hero: {
         title: 'NAPA',
+        titleDrinks: 'Discover our drinks',
+        titleFood: 'Discover our food',
         subtitle: 'Chapter One',
         tagline: 'An evening unlike any other',
         cta: 'Reserve a table',
@@ -206,9 +208,35 @@ const resources = {
       },
 
       theRoom: 'The Room',
-      kitchen: 'Kitchen',
+      kitchen: 'The Kitchen',
       bar: 'The Bar',
       farm: 'The Farm',
+      food: {
+        plate_one_name: "Burnt Aubergine",
+        plate_one_desc: "Smoked & slow-roasted",
+        plate_two_name: "Chermoula Prawns",
+        plate_two_desc: "Citrus & wild herb",
+        plate_three_name: "Bone Marrow Toast",
+        plate_three_desc: "Caramelised & charred",
+        plate_four_name: "Lamb Mechoui",
+        plate_four_desc: "Slow-cooked & tender",
+        plate_five_name: "Truffle Briouats",
+        plate_five_desc: "Crisp pastry & black truffle",
+        plate_six_name: "Burrata du Jour",
+        plate_six_desc: "Farm-fresh & seasonal",
+        plate_seven_name: "Octopus à la Braise",
+        plate_seven_desc: "Grilled over open flame",
+        plate_eight_name: "Foie Gras Pastilla",
+        plate_eight_desc: "Sweet, savoury & spiced",
+        plate_nine_name: "Wild Mushroom Crostini",
+        plate_nine_desc: "Earthy & aromatic",
+        plate_ten_name: "Tuna Crudo",
+        plate_ten_desc: "Preserved lemon & harissa",
+        plate_eleven_name: "Carrot & Cumin Dip",
+        plate_eleven_desc: "Slimane farm harvest",
+        plate_twelve_name: "Dark Chocolate Cremeux",
+        plate_twelve_desc: "Bitter, silky & cold"
+      }
     },
   },
 
@@ -234,6 +262,8 @@ const resources = {
 
       hero: {
         title: 'NAPA',
+        titleDrinks: 'Découvrez nos boissons',
+        titleFood: 'Découvrez notre cuisine',
         subtitle: 'Chapter One',
         tagline: 'Une soirée comme nulle autre',
         cta: 'Réserver une table',
@@ -417,6 +447,32 @@ const resources = {
       kitchen: 'La Cuisine',
       bar: 'Le Bar',
       farm: 'La Ferme',
+      food: {
+        plate_one_name: "Aubergine Brûlée",
+        plate_one_desc: "Fumée & rôtie lentement",
+        plate_two_name: "Crevettes Chermoula",
+        plate_two_desc: "Agrumes & herbes sauvages",
+        plate_three_name: "Toast à la Moelle",
+        plate_three_desc: "Caramélisée & carbonisée",
+        plate_four_name: "Agneau Méchoui",
+        plate_four_desc: "Cuit lentement & fondant",
+        plate_five_name: "Briouats à la Truffe",
+        plate_five_desc: "Pâte croustillante & truffe noire",
+        plate_six_name: "Burrata du Jour",
+        plate_six_desc: "Fraîche de la ferme & de saison",
+        plate_seven_name: "Pieuvre à la Braise",
+        plate_seven_desc: "Grillée sur flamme vive",
+        plate_eight_name: "Pastilla au Foie Gras",
+        plate_eight_desc: "Sucré, salé & épicé",
+        plate_nine_name: "Crostini aux Champignons",
+        plate_nine_desc: "Terreux & aromatique",
+        plate_ten_name: "Crudo de Thon",
+        plate_ten_desc: "Citron confit & harissa",
+        plate_eleven_name: "Dip Carotte & Cumin",
+        plate_eleven_desc: "Récolte de la ferme Slimane",
+        plate_twelve_name: "Crémeux Chocolat Noir",
+        plate_twelve_desc: "Amer, soyeux & glacé"
+      }
     },
   },
 }
