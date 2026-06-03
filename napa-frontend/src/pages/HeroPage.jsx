@@ -631,18 +631,18 @@ export default function HeroPage() {
           </h1>
           <Masonry
             items={[
-              { id: "1", img: "/images/food1.webp", height: 500, name: t('food.plate_one_name'), description: t('food.plate_one_desc') },
-              { id: "2", img: "/images/food2.webp", height: 1000, name: t('food.plate_two_name'), description: t('food.plate_two_desc') },
-              { id: "3", img: "/images/food3.webp", height: 500, name: t('food.plate_three_name'), description: t('food.plate_three_desc') },
-              { id: "4", img: "/images/food4.webp", height: 1000, name: t('food.plate_four_name'), description: t('food.plate_four_desc') },
-              { id: "5", img: "/images/food5.webp", height: 500, name: t('food.plate_five_name'), description: t('food.plate_five_desc') },
-              { id: "6", img: "/images/food6.webp", height: 1000, name: t('food.plate_six_name'), description: t('food.plate_six_desc') },
-              { id: "7", img: "/images/food7.webp", height: 500, name: t('food.plate_seven_name'), description: t('food.plate_seven_desc') },
-              { id: "8", img: "/images/food8.webp", height: 1000, name: t('food.plate_eight_name'), description: t('food.plate_eight_desc') },
-              { id: "9", img: "/images/food1.webp", height: 500, name: t('food.plate_nine_name'), description: t('food.plate_nine_desc') },
-              { id: "10", img: "/images/food4.webp", height: 1000, name: t('food.plate_ten_name'), description: t('food.plate_ten_desc') },
-              { id: "11", img: "/images/food6.webp", height: 500, name: t('food.plate_eleven_name'), description: t('food.plate_eleven_desc') },
-              { id: "12", img: "/images/food3.webp", height: 1000, name: t('food.plate_twelve_name'), description: t('food.plate_twelve_desc') },
+              { id: "13", img: "/images/plate.webp", height: 500, name: t('food.plate_one_name'), description: t('food.plate_one_desc') },
+              { id: "14", img: "/images/plate.webp", height: 1000, name: t('food.plate_two_name'), description: t('food.plate_two_desc') },
+              { id: "15", img: "/images/plate.webp", height: 500, name: t('food.plate_three_name'), description: t('food.plate_three_desc') },
+              { id: "16", img: "/images/plate.webp", height: 1000, name: t('food.plate_four_name'), description: t('food.plate_four_desc') },
+              { id: "17", img: "/images/plate.webp", height: 500, name: t('food.plate_five_name'), description: t('food.plate_five_desc') },
+              { id: "18", img: "/images/plate.webp", height: 1000, name: t('food.plate_six_name'), description: t('food.plate_six_desc') },
+              { id: "19", img: "/images/plate.webp", height: 500, name: t('food.plate_seven_name'), description: t('food.plate_seven_desc') },
+              { id: "20", img: "/images/plate.webp", height: 1000, name: t('food.plate_eight_name'), description: t('food.plate_eight_desc') },
+              { id: "21", img: "/images/plate.webp", height: 500, name: t('food.plate_nine_name'), description: t('food.plate_nine_desc') },
+              { id: "22", img: "/images/plate.webp", height: 1000, name: t('food.plate_ten_name'), description: t('food.plate_ten_desc') },
+              { id: "23", img: "/images/plate.webp", height: 500, name: t('food.plate_eleven_name'), description: t('food.plate_eleven_desc') },
+              { id: "24", img: "/images/plate.webp", height: 1000, name: t('food.plate_twelve_name'), description: t('food.plate_twelve_desc') },
             ]}
             colorShiftOnHover={false}
           />
