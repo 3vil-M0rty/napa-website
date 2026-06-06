@@ -560,7 +560,7 @@ export default function HeroPage() {
           padding: '0 1rem 60px',
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center',
+          alignItems: 'stretch',
           gap: '32px',
         }}>
           <h1
@@ -575,6 +575,7 @@ export default function HeroPage() {
               color: '#faf6ef',
               margin: 0,
               opacity: 0,
+              alignSelf: 'center', 
               transform: 'translateY(24px)',
               transition: 'opacity 0.8s ease, transform 0.8s ease',
             }}
@@ -608,7 +609,7 @@ export default function HeroPage() {
           padding: '0 1rem 60px',
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center',
+          alignItems: 'stretch',
           gap: '32px',
         }}>
           <h1
@@ -623,6 +624,7 @@ export default function HeroPage() {
               color: '#faf6ef',
               margin: 0,
               opacity: 0,
+              alignSelf: 'center', 
               transform: 'translateY(24px)',
               transition: 'opacity 0.8s ease, transform 0.8s ease',
             }}
@@ -646,8 +648,9 @@ export default function HeroPage() {
             ]}
             colorShiftOnHover={false}
           />
-          <OpenBookButton />
+          <OpenBookButton  style={{ alignSelf: 'center' }} />
         </div>
+        <div style={{width:"100%", height:"300px", backgroundColor: "transparent"}}></div>
         <ScrollVideo
           src="/videos/cocktail-making.mp4"
           scrollDuration={4000}   // px of scroll = full video playback
