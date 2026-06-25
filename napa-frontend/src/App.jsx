@@ -255,7 +255,7 @@ export default function App() {
   return (
     <>
       <GlobalLoader />
-      <Cursor />
+      {/* <Cursor /> */}
       <Navbar />
       <Routes>
         <Route path="/" element={<HeroPage />} />

@@ -51,7 +51,7 @@ const ExternalIcon = () => (
 
 const MapBlock = ({ isMobile }) => (
   <div
-    onClick={() => window.open('https://maps.google.com/?q=31.635,-8.015', '_blank', 'noopener,noreferrer')}
+    onClick={() => window.open('https://www.google.com/maps/place/Napa+Chapter+One+Marrakech,+el+Bekkal,+Boulevard+Mohamed+Zerktouni,+Marrakesh/@31.635,-8.0175749,17z/data=!4m5!3m4!1s0xdafefb870bb4599:0x1319fcb4af3b554c!8m2!3d31.6349844!4d-8.0153917?entry=ttu&g_ep=EgoyMDI2MDYyMi4wIKXMDSoASAFQAw%3D%3D', '_blank', 'noopener,noreferrer')}
     style={{
       position: 'relative',
       overflow: 'hidden',
@@ -129,7 +129,7 @@ export default function Footer() {
       }}
     >
       {/* ── LiquidEther background ───────────────────────────────── */}
-      {!isMobile && (
+      {/* {!isMobile && (
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
           <LiquidEther
             colors={['#e4908a', '#c71919', '#970303']}
@@ -150,7 +150,7 @@ export default function Footer() {
             style={{ width: '100%', height: '100%' }}
           />
         </div>
-      )}
+      )} */}
 
       {/* ── Dark overlay ─────────────────────────────────────────── */}
       <div style={{

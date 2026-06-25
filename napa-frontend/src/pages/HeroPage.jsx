@@ -369,7 +369,7 @@ function HeroOverlay() {
         </h1>
 
         <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '12px', alignItems: isMobile ? 'center' : 'flex-end' }}>
-          <Link to="/reserve" aria-label={t('hero.ctaPrimaryAriaLabel')} style={{ textDecoration: 'none' }}>
+          {/* <Link to="/reserve" aria-label={t('hero.ctaPrimaryAriaLabel')} style={{ textDecoration: 'none' }}>
             <button
               style={{
                 fontFamily: fontSans, fontSize: '10px', fontWeight: 500,
@@ -383,18 +383,18 @@ function HeroOverlay() {
             >
               {t('hero.ctaPrimary')}
             </button>
-          </Link>
+          </Link> */}
           <Link to="/cellar" aria-label={t('hero.ctaGhostAriaLabel')} style={{ textDecoration: 'none' }}>
             <button
-              style={{
+             style={{
                 fontFamily: fontSans, fontSize: '10px', fontWeight: 500,
                 letterSpacing: '3px', textTransform: 'uppercase',
-                padding: '12px 24px', background: 'transparent', color: C.cream,
-                border: `1px solid ${C.cream60}`, borderRadius: 0, cursor: 'pointer',
-                transition: 'background 0.2s ease, color 0.2s ease, border-color 0.2s ease', whiteSpace: 'nowrap',
+                padding: '12px 24px', background: C.wineRed, color: C.cream,
+                border: 'none', borderRadius: 0, cursor: 'pointer',
+                transition: 'background 0.2s ease', whiteSpace: 'nowrap',
               }}
-              onMouseEnter={e => { e.currentTarget.style.background = C.cream; e.currentTarget.style.color = C.ink; e.currentTarget.style.borderColor = C.cream }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = C.cream; e.currentTarget.style.borderColor = C.cream60 }}
+              onMouseEnter={e => { e.currentTarget.style.background = C.wineHover }}
+              onMouseLeave={e => { e.currentTarget.style.background = C.wineRed }}
             >
               {t('hero.ctaGhost')}
             </button>
