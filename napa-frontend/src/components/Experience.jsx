@@ -12,7 +12,11 @@ export const Experience = () => {
       >
         <Book />
       </Float>
-      <OrbitControls />
+      <OrbitControls
+        enableRotate={false}
+        enablePan={false}
+        enableZoom={true}
+      />
       <Environment preset="studio" />
 
       {/* Strong key light from upper right */}
