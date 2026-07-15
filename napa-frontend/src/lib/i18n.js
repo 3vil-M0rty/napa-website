@@ -116,6 +116,12 @@ const resources = {
             imgAlt: 'Art Deco interior of NAPA Chapter One wine bar in Gueliz, Marrakech',
             slug: 'intimate escape',
           },
+          oneone: {
+            title: 'Guided by Simone Mérette-Jara',
+            sub: 'Cheffe sommelière and mixologist, Simone curates every bottle, cocktail, and guest experience with warmth, precision, and an instinct for unforgettable hospitality.',
+            imgAlt: 'Simone Mérette-Jara, Cheffe sommelière and mixologist at NAPA Chapter One',
+            slug: 'simone merette-jara',
+          },
           six: {
             title: 'From the Kitchen of Driss Alaoui',
             sub: 'Sharing plates developed alongside the Farmers kitchen — seasonal produce, precise technique, Mediterranean warmth.',
@@ -351,6 +357,12 @@ const resources = {
             sub: 'Architecture Art Déco, lumières vintage, banquettes capitonnées. Une salle pensée pour ralentir le temps.',
             imgAlt: 'Intérieur Art Déco du bar à vins NAPA Chapter One, Guéliz, Marrakech',
             slug: 'espace intime',
+          },
+          oneone: {
+            title: 'L’Art de Recevoir',
+            sub: 'Cheffe sommelière et mixologue, Simone Mérette-Jara imagine chaque accord, chaque cocktail et chaque détail du service afin de faire de chaque visite une expérience mémorable.',
+            imgAlt: 'Simone Mérette-Jara, cheffe sommelière et mixologue du NAPA Chapter One',
+            slug: 'simone-merette-jara',
           },
           six: {
             title: 'La Cuisine de Driss Alaoui',
