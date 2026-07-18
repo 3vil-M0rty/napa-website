@@ -250,7 +250,7 @@ export default function MobileStack() {
 
             <div className="mbs3-text">
               <span className="mbs3-slug">
-                {t(`experience.slides.${['one', 'six', 'two', 'three'][i]}.slug`, slide.slug)}
+                {t(`experience.slides.${['one', 'oneone', 'six', 'two', 'three', 'four', 'five'][i]}.slug`, slide.slug)}
               </span>
 
               <div className="mbs3-rule" />
